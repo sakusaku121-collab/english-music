@@ -6,10 +6,10 @@
   <title>英語フレーズ100 🎵 歌で覚える英語</title>
   <style>
     :root {
-      --bg: #0a0a1a;
-      --pink: #ff2d9f;
-      --cyan: #00e5ff;
-      --purple: #7c3aed;
+      --bg: #0f0f0f;
+      --pink: #ff6b00;
+      --cyan: #ffa040;
+      --purple: #cc3300;
       --dim: rgba(255,255,255,0.35);
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -30,9 +30,9 @@
     .bg-aura {
       position: fixed; inset: 0; z-index: 0;
       background:
-        radial-gradient(ellipse 60% 40% at 20% 40%, rgba(124,58,237,0.35) 0%, transparent 70%),
-        radial-gradient(ellipse 50% 35% at 80% 60%, rgba(255,45,159,0.25) 0%, transparent 70%),
-        radial-gradient(ellipse 40% 30% at 50% 90%, rgba(0,229,255,0.15) 0%, transparent 70%);
+        radial-gradient(ellipse 60% 40% at 20% 40%, rgba(204,51,0,0.3) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 35% at 80% 60%, rgba(255,107,0,0.2) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 30% at 50% 90%, rgba(255,160,64,0.1) 0%, transparent 70%);
       animation: auraPulse 5s ease-in-out infinite;
     }
     @keyframes auraPulse {
@@ -293,7 +293,7 @@ class BeatMachine {
     this.duckGain  = null;
     this.reverbNode = null;
     this.reverbSend = null;
-    this.bpm       = 170;
+    this.bpm       = 140;
     this.playing   = false;
     this.step      = 0;
     this.nextTime  = 0;
@@ -397,31 +397,32 @@ class BeatMachine {
     // ── OPEN HAT
     if (s===7 || (bar===1 && s===15)) this._openhat(t);
 
-    // ── 808 BASS (quarter notes)
-    // F1=43.65  Ab1=51.91  Bb1=58.27  Db2=69.30  Eb2=77.78
+    // ── 808 BASS (quarter notes) — A minor
+    // A1=55  F1=43.65  G1=49  C2=65.41  E2=82.41
     const bass = [
-      [43.65, 43.65, 69.30, 77.78], // bar 0: F1 F1 Db2 Eb2
-      [43.65, 51.91, 58.27, 69.30], // bar 1: F1 Ab1 Bb1 Db2
+      [55.00, 55.00, 43.65, 49.00], // bar 0: A1 A1 F1 G1
+      [65.41, 82.41, 55.00, 49.00], // bar 1: C2 E2 A1 G1
     ];
     if (s % 4 === 0) this._808(t, bass[bar][s/4], sd * 3.85);
 
-    // ── PIANO MELODY (8th notes, inspired by Stay vibe)
-    // C5=523.25 Bb4=466.16 Ab4=415.30 G4=392 F4=349.23 Eb4=311.13
+    // ── SYNTH MELODY — Mii Channel chromatic descending riff
+    // A4=440 G#4=415.30 G4=392 F#4=369.99 F4=349.23 E4=329.63 Eb4=311.13 D4=293.66
     const R = 0;
     const mel = [
-      [523.25,R, 466.16,R, 415.30,R, R,R,     392.00,R, 415.30,R, 523.25,R, R,R],
-      [466.16,R, 415.30,R, 392.00,R, 349.23,R, 392.00,R, 415.30,R, 523.25,R, R,R],
+      // bar 0: クロマチック降下 A4→D4
+      [440.00,R, 415.30,R, 392.00,R, 369.99,R, 349.23,R, 329.63,R, 311.13,R, 293.66,R],
+      // bar 1: 解決＋上昇フレーズ
+      [261.63,R, 329.63,R, 392.00,R, 440.00,R, 392.00,R, 329.63,R, 523.25,R, R,R],
     ];
     if (s % 2 === 0) {
       const freq = mel[bar][s];
-      if (freq) this._piano(t, freq, sd * 1.9);
+      if (freq) this._mii(t, freq, sd * 1.6);
     }
 
-    // ── PAD CHORD (every bar start)
-    // Fm=F3,Ab3,C4 / DbM=Db3,F3,Ab3 / AbM=Ab2,C3,Eb3 / EbM=Eb3,G3,Bb3
+    // ── PAD CHORD — Am / FM
     const chords = [
-      [[174.61,207.65,261.63]],  // bar 0: Fm
-      [[138.59,174.61,207.65]],  // bar 1: DbM
+      [[220.00, 261.63, 329.63]],  // bar 0: Am (A3,C4,E4)
+      [[174.61, 220.00, 261.63]],  // bar 1: FM (F3,A3,C4)
     ];
     if (s === 0) chords[bar][0].forEach(f => this._pad(t, f, sd * 15));
   }
@@ -497,19 +498,26 @@ class BeatMachine {
   }
 
   _piano(t, freq, dur) {
+    this._mii(t, freq, dur);
+  }
+
+  _mii(t, freq, dur) {
     const {ctx} = this;
+    // Square wave (chiptune/video game feel) + lowpass to tame harshness
     const osc = ctx.createOscillator();
-    const osc2 = ctx.createOscillator();
-    const g = ctx.createGain(), g2 = ctx.createGain();
-    osc.type='triangle'; osc.frequency.value=freq;
-    osc2.type='sine';    osc2.frequency.value=freq*2; g2.gain.value=0.12;
-    g.gain.setValueAtTime(0,t);
-    g.gain.linearRampToValueAtTime(0.38,t+0.006);
-    g.gain.exponentialRampToValueAtTime(0.1,t+0.15);
-    g.gain.exponentialRampToValueAtTime(0.001,t+dur);
-    osc.connect(g); osc2.connect(g2); g2.connect(g);
+    const lp  = ctx.createBiquadFilter();
+    const g   = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.value = freq;
+    lp.type = 'lowpass'; lp.frequency.value = 1800; lp.Q.value = 0.4;
+    // Staccato envelope
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.22, t + 0.004);
+    g.gain.setValueAtTime(0.22, t + dur * 0.65);
+    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    osc.connect(lp); lp.connect(g);
     g.connect(this.out()); g.connect(this.verb());
-    osc.start(t); osc2.start(t); osc.stop(t+dur+0.1); osc2.stop(t+dur+0.1);
+    osc.start(t); osc.stop(t + dur + 0.05);
   }
 
   _pad(t, freq, dur) {
@@ -682,7 +690,7 @@ function startVisualBeat() {
   stopVisualBeat();
   beatPos=0;
   // 16th note at 170 BPM = 60/170/4 s ≈ 88 ms
-  const ms = (60000/170/4);
+  const ms = (60000/140/4);
   beatTick = setInterval(() => {
     bDots.forEach(d=>d.classList.remove('lit'));
     bDots[beatPos % bDots.length].classList.add('lit');
@@ -733,7 +741,7 @@ musicBtn.addEventListener('click', async () => {
     startVisualBeat();
     musicBtn.textContent='🔇';
     musicBtn.classList.remove('music-off');
-    hint.textContent='🎵 Stay / トラップビート再生中';
+    hint.textContent='🎵 Mii Channel × Dubtendo スタイル再生中';
   } else {
     beat.stop();
     if (!playing) stopVisualBeat();
@@ -757,7 +765,7 @@ document.querySelectorAll('.spd').forEach(b => {
 // ─────────────────────────────────────────────
 function spawnParticles() {
   const el=document.getElementById('particles');
-  const colors=['#ff2d9f','#00e5ff','#7c3aed','#fff','#f59e0b'];
+  const colors=['#ff6b00','#ffa040','#cc3300','#fff','#ffcc00'];
   for (let i=0;i<22;i++) {
     const p=document.createElement('div'); p.className='particle';
     p.style.cssText=`
