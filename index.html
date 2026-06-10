@@ -337,6 +337,23 @@ const DATA = {
 };
 
 // ════════════════════════════════════════════
+// Mario melody — 4-bar loop, 16 steps each (0 = rest)
+// ════════════════════════════════════════════
+const R=0,E4=329.63,G4=392.00,A4=440.00,Bb4=466.16,B4=493.88,
+      C5=523.25,D5=587.33,E5=659.25,F5=698.46,G5=784.00,A5=880.00;
+const MARIO_MEL = [
+  // bar 0: famous intro riff
+  [E5,R,E5,R, R,R,C5,R, E5,R,R,R, G5,R,R,R],
+  // bar 1: jump down, then up
+  [G4,R,R,R, R,R,R,R, C5,R,G4,R, E4,R,R,R],
+  // bar 2: chromatic dance run
+  [A4,R,B4,R, Bb4,R,A4,R, G4,R,E5,R, G5,R,A5,R],
+  // bar 3: resolution phrase
+  [F5,R,G5,R, E5,R,R,R, C5,R,D5,R, B4,R,R,R],
+];
+const MARIO_BASS = [82.41, 65.41, 55.00, 65.41]; // E2, C2, A1, C2
+
+// ════════════════════════════════════════════
 // BeatMachine — Song structure + 音ハメ callbacks
 // Sections: quiet (8 bars) → build (4 bars) → drop (16 bars) → repeat
 // ════════════════════════════════════════════
@@ -344,7 +361,7 @@ class BeatMachine {
   constructor() {
     this.ctx = null; this.masterGain = null; this.duckGain = null;
     this.reverbNode = null; this.reverbSend = null;
-    this.bpm = 140; this.playing = false;
+    this.bpm = 160; this.playing = false;
     this.step = 0; this.nextTime = 0; this.timerID = null;
     this.barCount = 0;
     this.section = 'quiet'; // 'quiet' | 'build' | 'drop'
@@ -449,75 +466,53 @@ class BeatMachine {
     }
   }
 
-  // ── QUIET: pad + very sparse melody, no drums ──────────────────
+  // ── QUIET: pad + sparse Mario melody, no drums ────────────────
   _stepQuiet(step, t, sd) {
-    const s=step%16, bar2=Math.floor(step/16)%2;
-    // Pad every bar
-    if(s===0){
-      const pads=[[220,261.63,329.63],[174.61,220,261.63]];
-      pads[bar2].forEach(f=>this._pad(t,f,sd*15,0.035));
-    }
-    // Sparse half-note melody
-    const R=0;
-    const mel=[[440,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R],[R,R,R,R,R,R,R,R,261.63,R,R,R,R,R,R,R]];
-    if(s%2===0){const f=mel[bar2][s];if(f) this._mii(t,f*0.5,sd*7,0.06);}
+    const s=step%16, bm=Math.floor(step/16)%4;
+    if(s===0){[261.63,329.63,392].forEach(f=>this._pad(t,f,sd*15,0.038));}
+    if(s%4===0){const f=MARIO_MEL[bm][s];if(f)this._mii(t,f,sd*3.5,0.07);}
   }
 
-  // ── BUILD: hihat + bass beat 1 + more melody ───────────────────
+  // ── BUILD: hi-hat enters + bass beat 1 + Mario melody ────────
   _stepBuild(step, t, sd) {
-    const s=step%16, bar2=Math.floor(step/16)%2;
-    // Hi-hat (8th notes only)
-    if(s%2===0){const v=[.35,.35,.4,.35,.45,.35,.4,.35];this._hihat(t,v[s/2]*0.45);}
-    // Bass only on beat 1
-    if(s===0) this._808(t,55.00,sd*4*0.85);
+    const s=step%16, bm=Math.floor(step/16)%4;
+    // Hi-hat 8th notes: offbeats louder (シャン preview)
+    if(s%2===0){const off=(s%4===2);this._hihat(t,off?0.40:0.14);}
+    // Bass on beat 1 only (long note to fill the bar)
+    if(s===0){this._808(t,MARIO_BASS[bm],sd*7.6);}
     // Pad
-    if(s===0){
-      const pads=[[220,261.63,329.63],[174.61,220,261.63]];
-      pads[bar2].forEach(f=>this._pad(t,f,sd*15,0.055));
-    }
-    // Quarter-note melody
-    const R=0;
-    const mel=[
-      [440,R,415.30,R,392,R,R,R, 349.23,R,329.63,R,R,R,R,R],
-      [261.63,R,329.63,R,392,R,440,R, R,R,329.63,R,R,R,R,R],
-    ];
-    if(s%2===0){const f=mel[bar2][s];if(f) this._mii(t,f,sd*1.8,0.14);}
+    if(s===0){[261.63,329.63,392].forEach(f=>this._pad(t,f,sd*15,0.05));}
+    // Mario melody
+    const f=MARIO_MEL[bm][s];if(f)this._mii(t,f,sd*1.5,0.13);
   }
 
-  // ── DROP: full trap beat ────────────────────────────────────────
+  // ── DROP: 4-on-the-floor + 裏拍ハイハット + Mario melody ────────
   _stepDrop(step, t, sd) {
-    const s=step%16, bar2=Math.floor(step/16)%2;
-
-    // Kick
-    const k0=[1,0,0,0, 0,0,1,0, 1,0,0,0, 0,1,0,0];
-    const k1=[1,0,0,0, 0,0,0,0, 1,0,1,0, 0,0,1,0];
-    if((bar2===0?k0:k1)[s]){
+    const s=step%16, bm=Math.floor(step/16)%4;
+    // 4-on-the-floor kick (every beat: 0, 4, 8, 12)
+    if(s%4===0){
       this._kick(t);
       if(this.onKick) this._cb(this.onKick, t);
     }
-    // Snare
+    // Snare on beats 2 and 4
     if(s===4||s===12){
       this._snare(t);
       if(this.onSnare) this._cb(this.onSnare, t);
     }
-    // Hi-hat 16ths
-    const hv=[.6,.22,.5,.22,.7,.22,.55,.22,.6,.22,.5,.22,.75,.22,.9,.3];
-    this._hihat(t,hv[s]*0.46);
-    // Open hat
-    if(s===7||(bar2===1&&s===15)) this._openhat(t);
-    // 808 bass
-    const bass=[[55,55,43.65,49],[65.41,82.41,55,49]];
-    if(s%4===0) this._808(t,bass[bar2][s/4],sd*3.85);
-    // Melody: Mii Channel chromatic descend
-    const R=0;
-    const mel=[
-      [440,R, 415.30,R, 392,R, 369.99,R, 349.23,R, 329.63,R, 311.13,R, 293.66,R],
-      [261.63,R, 329.63,R, 392,R, 440,R, 392,R, 329.63,R, 523.25,R, R,R],
-    ];
-    if(s%2===0){const f=mel[bar2][s];if(f) this._mii(t,f,sd*1.6);}
-    // Pad
-    const ch=[[[220,261.63,329.63]],[[174.61,220,261.63]]];
-    if(s===0) ch[bar2][0].forEach(f=>this._pad(t,f,sd*15));
+    // Hi-hat: every 8th note, offbeats louder (シャンシャン)
+    if(s%2===0){
+      const off=(s%4===2); // positions 2, 6, 10, 14 = 裏拍
+      this._hihat(t, off ? 0.64 : 0.20);
+    }
+    // Open hat on bar end
+    if(s===14) this._openhat(t);
+    // 808 bass on every beat
+    if(s%4===0) this._808(t, MARIO_BASS[bm], sd*3.6);
+    // Mario melody
+    const f=MARIO_MEL[bm][s];
+    if(f) this._mii(t, f, sd*1.7);
+    // Pad (warm background)
+    if(s===0)[261.63,329.63,392].forEach(fr=>this._pad(t,fr,sd*15,0.04));
   }
 
   // ── Sounds ────────────────────────────────────────────────────
@@ -713,7 +708,7 @@ function stopAll(){
 // ── Visual beat ──
 function startVisualBeat(){
   stopVisualBeat(); beatPos=0;
-  const ms=60000/140/4; // 16th note at 140 BPM
+  const ms=60000/160/4; // 16th note at 160 BPM
   beatTick=setInterval(()=>{
     bDots.forEach(d=>d.classList.remove('lit'));
     bDots[beatPos%bDots.length].classList.add('lit');
@@ -779,7 +774,7 @@ musicBtn.addEventListener('click',async()=>{
     startVisualBeat();
     musicBtn.textContent='🔇';
     musicBtn.classList.remove('music-off');
-    hint.textContent='🎵 Mii Channel × Dubtendo スタイル';
+    hint.textContent='🕹️ 160BPM 4つ打ち × マリオビート';
   } else {
     beat.stop();
     if(!playing)stopVisualBeat();
