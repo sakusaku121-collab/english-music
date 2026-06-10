@@ -7,9 +7,9 @@
   <style>
     :root {
       --bg: #0f0f0f;
-      --pink: #ff6b00;
-      --cyan: #ffa040;
-      --purple: #cc3300;
+      --orange: #ff6b00;
+      --amber: #ffa040;
+      --red: #cc3300;
       --dim: rgba(255,255,255,0.35);
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -18,15 +18,13 @@
       background: var(--bg);
       color: #fff;
       font-family: 'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic', sans-serif;
-      min-height: 100dvh;
-      max-width: 480px;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      position: relative;
+      min-height: 100dvh; max-width: 480px;
+      margin: 0 auto; display: flex; flex-direction: column;
+      overflow: hidden; position: relative;
+      transition: background-color 0.06s;
     }
 
+    /* ── Animated bg aura ── */
     .bg-aura {
       position: fixed; inset: 0; z-index: 0;
       background:
@@ -34,38 +32,48 @@
         radial-gradient(ellipse 50% 35% at 80% 60%, rgba(255,107,0,0.2) 0%, transparent 70%),
         radial-gradient(ellipse 40% 30% at 50% 90%, rgba(255,160,64,0.1) 0%, transparent 70%);
       animation: auraPulse 5s ease-in-out infinite;
+      transition: opacity 1.5s, animation-duration 1s;
     }
-    @keyframes auraPulse {
-      0%,100% { opacity: 0.7; } 50% { opacity: 1; }
-    }
+    @keyframes auraPulse { 0%,100%{opacity:.7} 50%{opacity:1} }
+
+    /* Section-based aura intensity */
+    body.s-quiet  .bg-aura { opacity: 0.15 !important; animation-duration: 10s; }
+    body.s-build  .bg-aura { opacity: 0.5  !important; animation-duration: 3s; }
+    body.s-drop   .bg-aura { opacity: 1    !important; animation-duration: 1.2s; }
 
     #particles { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
-    .particle {
-      position: absolute; border-radius: 50%;
-      animation: floatUp linear infinite;
-    }
+    .particle { position: absolute; border-radius: 50%; animation: floatUp linear infinite; }
     @keyframes floatUp {
-      from { transform: translateY(105vh) translateX(0px); opacity: 0.8; }
-      to   { transform: translateY(-5vh)  translateX(30px); opacity: 0; }
+      from { transform: translateY(105vh) translateX(0px); opacity:.8; }
+      to   { transform: translateY(-5vh)  translateX(30px); opacity:0; }
     }
 
     header, .cats, .stage, .info-row, .controls, .speeds {
       position: relative; z-index: 10;
     }
 
-    header { text-align: center; padding: 16px 16px 8px; }
+    header { text-align: center; padding: 14px 16px 6px; }
     .title {
-      font-size: 1.1rem; font-weight: 900;
-      background: linear-gradient(135deg, var(--pink), var(--cyan));
+      font-size: 1.05rem; font-weight: 900;
+      background: linear-gradient(135deg, var(--orange), var(--amber));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      filter: drop-shadow(0 0 8px var(--pink));
+      filter: drop-shadow(0 0 8px var(--orange));
     }
-    .subtitle { font-size: 0.7rem; color: var(--cyan); margin-top: 3px; opacity: 0.85; }
+    .subtitle { font-size: 0.68rem; color: var(--amber); margin-top: 3px; opacity: 0.85; }
 
-    .cats {
-      display: flex; gap: 7px; padding: 6px 14px;
-      overflow-x: auto; scrollbar-width: none;
+    /* ── Section badge ── */
+    .section-badge {
+      position: relative; z-index: 10;
+      text-align: center; font-size: 0.6rem; letter-spacing: 0.14em;
+      text-transform: uppercase; min-height: 14px; margin: 0 0 2px;
+      color: rgba(255,255,255,0.35); transition: color 0.8s;
     }
+    body.s-quiet  .section-badge { color: rgba(255,160,64,0.4); }
+    body.s-build  .section-badge { color: rgba(255,107,0,0.7); }
+    body.s-drop   .section-badge { color: var(--orange); text-shadow: 0 0 8px var(--orange); }
+
+    /* ── Category tabs ── */
+    .cats { display: flex; gap: 7px; padding: 5px 14px; overflow-x: auto; scrollbar-width: none; }
     .cats::-webkit-scrollbar { display: none; }
     .cat {
       flex-shrink: 0; padding: 5px 13px; border-radius: 20px;
@@ -74,94 +82,138 @@
       font-size: 0.72rem; cursor: pointer; transition: all 0.25s; white-space: nowrap;
     }
     .cat.active {
-      background: linear-gradient(135deg, var(--purple), var(--pink));
+      background: linear-gradient(135deg, var(--red), var(--orange));
       border-color: transparent; color: #fff; font-weight: 700;
-      box-shadow: 0 0 14px rgba(255,45,159,0.45);
+      box-shadow: 0 0 14px rgba(255,107,0,0.5);
     }
 
+    /* ── Phrase stage ── */
     .stage {
       flex: 1; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; padding: 8px 0;
+      align-items: center; justify-content: center; padding: 6px 0;
     }
 
-    .speak-bars { display: flex; gap: 3px; align-items: flex-end; height: 22px; margin-bottom: 8px; }
+    .speak-bars { display: flex; gap: 3px; align-items: flex-end; height: 22px; margin-bottom: 6px; }
     .speak-bars.off { opacity: 0; }
-    .sb { width: 4px; border-radius: 2px; background: var(--cyan); animation: sbPulse 0.5s ease-in-out infinite; }
-    .sb:nth-child(1){animation-delay:0s} .sb:nth-child(2){animation-delay:.08s}
-    .sb:nth-child(3){animation-delay:.16s} .sb:nth-child(4){animation-delay:.24s}
+    .sb { width: 4px; border-radius: 2px; background: var(--amber); animation: sbPulse .5s ease-in-out infinite; }
+    .sb:nth-child(1){animation-delay:0s}.sb:nth-child(2){animation-delay:.08s}
+    .sb:nth-child(3){animation-delay:.16s}.sb:nth-child(4){animation-delay:.24s}
     .sb:nth-child(5){animation-delay:.32s}
-    @keyframes sbPulse { 0%,100% { height: 4px; } 50% { height: 18px; } }
+    @keyframes sbPulse { 0%,100%{height:4px} 50%{height:18px} }
 
+    /* ── Phrase window ── */
     .phrase-window {
       width: 100%; display: flex; flex-direction: column; align-items: center;
-      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%);
-      mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 16%, black 84%, transparent 100%);
+      mask-image: linear-gradient(to bottom, transparent 0%, black 16%, black 84%, transparent 100%);
     }
     .ph-item {
       width: 100%; text-align: center; padding: 5px 20px;
       display: flex; flex-direction: column; align-items: center; gap: 3px;
-      cursor: pointer; transition: all 0.45s cubic-bezier(0.4,0,0.2,1);
+      cursor: pointer; transition: all .45s cubic-bezier(.4,0,.2,1);
     }
-    .ph-en { font-weight: 900; line-height: 1.2; transition: all 0.45s; }
-    .ph-ja { font-size: 0.85rem; transition: all 0.45s; }
+    .ph-en { font-weight: 900; line-height: 1.2; transition: all .45s; will-change: transform; }
+    .ph-ja { font-size: .85rem; transition: all .45s; }
 
     .ph-item[data-pos="0"] .ph-en {
-      font-size: 1.85rem; color: var(--pink);
-      text-shadow: 0 0 18px var(--pink), 0 0 36px rgba(255,45,159,0.5);
-      animation: phraseIn 0.35s ease-out;
+      font-size: 1.85rem; color: var(--orange);
+      text-shadow: 0 0 18px var(--orange), 0 0 36px rgba(255,107,0,0.5);
     }
-    .ph-item[data-pos="0"] .ph-ja { font-size: 1rem; color: var(--cyan); text-shadow: 0 0 10px var(--cyan); }
-    .ph-item[data-pos="1"] .ph-en, .ph-item[data-pos="-1"] .ph-en { font-size: 1.2rem; color: rgba(255,255,255,0.5); }
-    .ph-item[data-pos="1"] .ph-ja, .ph-item[data-pos="-1"] .ph-ja { color: rgba(255,255,255,0.28); font-size: 0.75rem; }
-    .ph-item[data-pos="2"] .ph-en, .ph-item[data-pos="-2"] .ph-en { font-size: 0.9rem; color: rgba(255,255,255,0.18); }
-    .ph-item[data-pos="2"] .ph-ja, .ph-item[data-pos="-2"] .ph-ja { display: none; }
-    @keyframes phraseIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+    .ph-item[data-pos="0"] .ph-ja { font-size: 1rem; color: var(--amber); text-shadow: 0 0 10px var(--amber); }
+    .ph-item[data-pos="1"] .ph-en,
+    .ph-item[data-pos="-1"] .ph-en { font-size: 1.2rem; color: rgba(255,255,255,0.5); }
+    .ph-item[data-pos="1"] .ph-ja,
+    .ph-item[data-pos="-1"] .ph-ja { color: rgba(255,255,255,0.28); font-size: .75rem; }
+    .ph-item[data-pos="2"] .ph-en,
+    .ph-item[data-pos="-2"] .ph-en { font-size: .9rem; color: rgba(255,255,255,0.18); }
+    .ph-item[data-pos="2"] .ph-ja,
+    .ph-item[data-pos="-2"] .ph-ja { display: none; }
 
-    .mode-lbl { font-size: 0.7rem; color: var(--pink); letter-spacing: 0.06em; margin-top: 8px; min-height: 16px; text-shadow: 0 0 8px var(--pink); }
+    /* ── 音ハメ animations ── */
+    @keyframes kickHit {
+      0%   { transform: scale(1.14); filter: brightness(2.2) drop-shadow(0 0 20px var(--orange)); }
+      60%  { transform: scale(1.02); }
+      100% { transform: scale(1);    filter: brightness(1)   drop-shadow(0 0 18px var(--orange)); }
+    }
+    @keyframes snareWide {
+      0%   { letter-spacing: 0.08em; opacity: .7; }
+      100% { letter-spacing: 0.01em; opacity: 1; }
+    }
+    .ph-item[data-pos="0"].kick-hit .ph-en {
+      animation: kickHit 0.28s ease-out;
+    }
+    .ph-item[data-pos="0"].snare-hit .ph-en {
+      animation: snareWide 0.18s ease-out;
+    }
 
-    .beat-row { display: flex; gap: 7px; align-items: center; margin-top: 10px; }
-    .bd { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: all 0.1s; }
-    .bd.lit { background: var(--pink); box-shadow: 0 0 10px var(--pink); transform: scale(1.6); }
+    /* Section-gated quiet dim */
+    body.s-quiet .ph-item[data-pos="0"] .ph-en {
+      text-shadow: 0 0 8px rgba(255,107,0,0.4);
+      font-size: 1.6rem;
+    }
 
+    .mode-lbl {
+      font-size: .7rem; color: var(--orange); letter-spacing: .06em;
+      margin-top: 6px; min-height: 16px; text-shadow: 0 0 8px var(--orange);
+    }
+
+    /* ── Beat dots ── */
+    .beat-row { display: flex; gap: 7px; align-items: center; margin-top: 8px; }
+    .bd { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.15); transition: all .1s; }
+    .bd.lit { background: var(--orange); box-shadow: 0 0 10px var(--orange); transform: scale(1.6); }
+
+    body.s-quiet .beat-row { opacity: 0.25; transition: opacity 1.5s; }
+    body.s-build .beat-row { opacity: 0.55; transition: opacity 0.8s; }
+    body.s-drop  .beat-row { opacity: 1;    transition: opacity 0.3s; }
+
+    /* ── Info row ── */
     .info-row {
       display: flex; align-items: center; justify-content: center;
-      gap: 12px; padding: 5px 20px 3px; font-size: 0.72rem; color: var(--dim);
+      gap: 12px; padding: 4px 20px 3px; font-size: .72rem; color: var(--dim);
     }
     .progress-wrap { flex: 1; max-width: 180px; height: 3px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
-    .progress-fill { height: 100%; background: linear-gradient(to right, var(--purple), var(--pink)); border-radius: 3px; transition: width 0.4s; }
+    .progress-fill { height: 100%; background: linear-gradient(to right, var(--red), var(--orange)); border-radius: 3px; transition: width .4s; }
 
+    /* ── Controls ── */
     .controls { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 8px 20px; }
     .cbtn {
-      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.14);
       border-radius: 50%; width: 44px; height: 44px;
       display: flex; align-items: center; justify-content: center;
-      cursor: pointer; color: #fff; font-size: 1rem; transition: all 0.2s;
+      cursor: pointer; color: #fff; font-size: 1rem; transition: all .2s;
       -webkit-tap-highlight-color: transparent;
     }
     .cbtn:active { transform: scale(0.9); }
-    .cbtn.icon-active { color: var(--cyan); border-color: var(--cyan); box-shadow: 0 0 10px rgba(0,229,255,0.3); }
-    .cbtn.music-off { color: rgba(255,255,255,0.3); border-color: rgba(255,255,255,0.1); }
+    .cbtn.icon-active { color: var(--amber); border-color: var(--amber); box-shadow: 0 0 10px rgba(255,160,64,0.35); }
+    .cbtn.music-off { color: rgba(255,255,255,0.25); border-color: rgba(255,255,255,0.08); }
     .play-cbtn {
       width: 60px; height: 60px;
-      background: linear-gradient(135deg, var(--purple), var(--pink));
+      background: linear-gradient(135deg, var(--red), var(--orange));
       border: none; font-size: 1.4rem;
-      box-shadow: 0 0 28px rgba(255,45,159,0.55);
+      box-shadow: 0 0 28px rgba(255,107,0,0.6);
     }
-    .play-cbtn.playing { background: linear-gradient(135deg, #1e1e3a, var(--purple)); box-shadow: 0 0 28px rgba(124,58,237,0.6); }
+    .play-cbtn.playing {
+      background: linear-gradient(135deg, #2a0a00, var(--red));
+      box-shadow: 0 0 28px rgba(204,51,0,0.6);
+    }
 
-    .speeds { display: flex; gap: 8px; justify-content: center; padding: 4px 20px 14px; }
+    /* ── Speeds ── */
+    .speeds { display: flex; gap: 8px; justify-content: center; padding: 4px 20px 12px; }
     .spd {
       padding: 4px 13px; border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.15); background: transparent;
-      color: var(--dim); font-size: 0.72rem; cursor: pointer; transition: all 0.2s;
+      border: 1px solid rgba(255,255,255,0.14); background: transparent;
+      color: var(--dim); font-size: .72rem; cursor: pointer; transition: all .2s;
       -webkit-tap-highlight-color: transparent;
     }
-    .spd.active { background: var(--cyan); border-color: transparent; color: var(--bg); font-weight: 800; }
+    .spd.active { background: var(--amber); border-color: transparent; color: var(--bg); font-weight: 800; }
 
-    .music-hint { position: relative; z-index: 10; text-align: center; font-size: 0.65rem; color: rgba(255,255,255,0.3); padding-bottom: 8px; }
+    .music-hint {
+      position: relative; z-index: 10; text-align: center;
+      font-size: .62rem; color: rgba(255,255,255,0.28); padding-bottom: 8px;
+    }
   </style>
 </head>
-<body>
+<body class="s-quiet">
 <div class="bg-aura"></div>
 <div id="particles"></div>
 
@@ -170,6 +222,7 @@
   <div class="subtitle">ネイティブが実際に使うフレーズを歌で覚えよう</div>
 </header>
 
+<div class="section-badge" id="sectionBadge"></div>
 <div class="cats" id="cats"></div>
 
 <div class="stage">
@@ -193,11 +246,11 @@
 </div>
 
 <div class="controls">
-  <button class="cbtn" id="musicBtn" title="音楽ON/OFF">🎵</button>
+  <button class="cbtn" id="musicBtn">🎵</button>
   <button class="cbtn" id="prevBtn">⏮</button>
   <button class="cbtn play-cbtn" id="playBtn">▶</button>
   <button class="cbtn" id="nextBtn">⏭</button>
-  <button class="cbtn" id="repeatBtn" title="リピート">🔁</button>
+  <button class="cbtn" id="repeatBtn">🔁</button>
 </div>
 
 <div class="speeds">
@@ -209,582 +262,555 @@
 <div class="music-hint" id="musicHint">🎵 タップして音楽スタート</div>
 
 <script>
-// ─────────────────────────────────────────────
+// ════════════════════════════════════════════
 // Phrase data
-// ─────────────────────────────────────────────
+// ════════════════════════════════════════════
 const DATA = {
-  daily: { title: "日常会話", phrases: [
-    { en: "I'm not sure yet",          ja: "まだ分かりません" },
-    { en: "Give me a second",          ja: "ちょっと待ってください" },
-    { en: "I'm running late",          ja: "遅れています" },
-    { en: "That's a good point",       ja: "それは一理ありますね" },
-    { en: "I didn't catch that",       ja: "聞き取れませんでした" },
-    { en: "Could you say that again?", ja: "もう一度言ってください" },
-    { en: "You're welcome",            ja: "どういたしまして" },
-    { en: "Don't worry about it",      ja: "お気になさらず" },
-    { en: "I have no idea",            ja: "全然わかりません" },
-    { en: "That makes sense",          ja: "なるほどですね" },
-    { en: "I'm on it",                 ja: "対応します" },
-    { en: "Take your time",            ja: "ゆっくりどうぞ" },
-    { en: "Let me think about it",     ja: "考えさせてください" },
-    { en: "What's up?",                ja: "どうしたの？" },
-    { en: "Never mind",                ja: "気にしないで" },
+  daily: { title:"日常会話", phrases:[
+    {en:"I'm not sure yet",ja:"まだ分かりません"},
+    {en:"Give me a second",ja:"ちょっと待ってください"},
+    {en:"I'm running late",ja:"遅れています"},
+    {en:"That's a good point",ja:"それは一理ありますね"},
+    {en:"I didn't catch that",ja:"聞き取れませんでした"},
+    {en:"Could you say that again?",ja:"もう一度言ってください"},
+    {en:"You're welcome",ja:"どういたしまして"},
+    {en:"Don't worry about it",ja:"お気になさらず"},
+    {en:"I have no idea",ja:"全然わかりません"},
+    {en:"That makes sense",ja:"なるほどですね"},
+    {en:"I'm on it",ja:"対応します"},
+    {en:"Take your time",ja:"ゆっくりどうぞ"},
+    {en:"Let me think about it",ja:"考えさせてください"},
+    {en:"What's up?",ja:"どうしたの？"},
+    {en:"Never mind",ja:"気にしないで"},
   ]},
-  business: { title: "ビジネス", phrases: [
-    { en: "I'll get back to you",         ja: "折り返し連絡します" },
-    { en: "Let's schedule a meeting",     ja: "会議を設定しましょう" },
-    { en: "What's the deadline?",         ja: "締め切りはいつですか" },
-    { en: "That sounds like a plan",      ja: "それはうまくいきそうです" },
-    { en: "Could you check this?",        ja: "ご確認いただけますか" },
-    { en: "I'll look into it",            ja: "調べてみます" },
-    { en: "Let's move forward",           ja: "進めましょう" },
-    { en: "What's the status?",           ja: "進捗を教えてください" },
-    { en: "Just to be safe",              ja: "念のため確認します" },
-    { en: "That's a tough one",           ja: "それは難しいですね" },
-    { en: "I think we can make it work",  ja: "うまくできると思います" },
-    { en: "Let me loop you in",           ja: "あなたも含めますね" },
-    { en: "Can we push the deadline?",    ja: "締め切りを延ばせますか" },
-    { en: "I'll take care of it",         ja: "任せてください" },
-    { en: "Does that work for you?",      ja: "それで大丈夫ですか？" },
+  business: { title:"ビジネス", phrases:[
+    {en:"I'll get back to you",ja:"折り返し連絡します"},
+    {en:"Let's schedule a meeting",ja:"会議を設定しましょう"},
+    {en:"What's the deadline?",ja:"締め切りはいつですか"},
+    {en:"That sounds like a plan",ja:"それはうまくいきそうです"},
+    {en:"Could you check this?",ja:"ご確認いただけますか"},
+    {en:"I'll look into it",ja:"調べてみます"},
+    {en:"Let's move forward",ja:"進めましょう"},
+    {en:"What's the status?",ja:"進捗を教えてください"},
+    {en:"Just to be safe",ja:"念のため確認します"},
+    {en:"That's a tough one",ja:"それは難しいですね"},
+    {en:"I think we can make it work",ja:"うまくできると思います"},
+    {en:"Let me loop you in",ja:"あなたも含めますね"},
+    {en:"Can we push the deadline?",ja:"締め切りを延ばせますか"},
+    {en:"I'll take care of it",ja:"任せてください"},
+    {en:"Does that work for you?",ja:"それで大丈夫ですか？"},
   ]},
-  emotion: { title: "気持ち", phrases: [
-    { en: "You really saved me!",     ja: "本当に助かりました！" },
-    { en: "I can't believe it!",      ja: "信じられない！" },
-    { en: "Take it easy",             ja: "大丈夫ですよ" },
-    { en: "That's spot on!",          ja: "完璧です！" },
-    { en: "I'm so jealous!",          ja: "うらやましい！" },
-    { en: "Give me a break!",         ja: "もうやめて！" },
-    { en: "I couldn't care less",     ja: "どうでもいいです" },
-    { en: "Cheer up!",                ja: "元気出して！" },
-    { en: "You've got this!",         ja: "頑張れ！" },
-    { en: "That means a lot to me",   ja: "それはとても嬉しいです" },
-    { en: "I'm blown away",           ja: "本当に驚きました" },
-    { en: "That's hilarious!",        ja: "めちゃ面白い！" },
-    { en: "I feel you",               ja: "気持ちわかるよ" },
-    { en: "I'm so proud of you",      ja: "本当に誇りに思う" },
-    { en: "I'm fed up",               ja: "うんざりです" },
+  emotion: { title:"気持ち", phrases:[
+    {en:"You really saved me!",ja:"本当に助かりました！"},
+    {en:"I can't believe it!",ja:"信じられない！"},
+    {en:"Take it easy",ja:"大丈夫ですよ"},
+    {en:"That's spot on!",ja:"完璧です！"},
+    {en:"I'm so jealous!",ja:"うらやましい！"},
+    {en:"Give me a break!",ja:"もうやめて！"},
+    {en:"I couldn't care less",ja:"どうでもいいです"},
+    {en:"Cheer up!",ja:"元気出して！"},
+    {en:"You've got this!",ja:"頑張れ！"},
+    {en:"That means a lot to me",ja:"それはとても嬉しいです"},
+    {en:"I'm blown away",ja:"本当に驚きました"},
+    {en:"That's hilarious!",ja:"めちゃ面白い！"},
+    {en:"I feel you",ja:"気持ちわかるよ"},
+    {en:"I'm so proud of you",ja:"本当に誇りに思う"},
+    {en:"I'm fed up",ja:"うんざりです"},
   ]},
-  travel: { title: "旅行", phrases: [
-    { en: "Where is it?",                      ja: "どこですか？" },
-    { en: "How much is it?",                   ja: "いくらですか？" },
-    { en: "What do you recommend?",            ja: "おすすめは何ですか？" },
-    { en: "Check, please",                     ja: "お会計をお願いします" },
-    { en: "I'm lost",                          ja: "道に迷いました" },
-    { en: "Can I try this on?",                ja: "試着できますか？" },
-    { en: "I'll take this one",                ja: "これをください" },
-    { en: "Can I take a photo?",               ja: "写真を撮ってもいいですか？" },
-    { en: "Do you have a menu?",               ja: "メニューはありますか？" },
-    { en: "One more, please",                  ja: "もう一つください" },
-    { en: "Is this seat taken?",               ja: "ここは空いていますか？" },
-    { en: "Can I have the Wi-Fi password?",    ja: "Wi-Fiのパスワードを教えてください" },
-    { en: "Where's the nearest station?",      ja: "一番近い駅はどこですか？" },
-    { en: "I'd like to book a room",           ja: "部屋を予約したいです" },
-    { en: "What time does it open?",           ja: "何時に開きますか？" },
+  travel: { title:"旅行", phrases:[
+    {en:"Where is it?",ja:"どこですか？"},
+    {en:"How much is it?",ja:"いくらですか？"},
+    {en:"What do you recommend?",ja:"おすすめは何ですか？"},
+    {en:"Check, please",ja:"お会計をお願いします"},
+    {en:"I'm lost",ja:"道に迷いました"},
+    {en:"Can I try this on?",ja:"試着できますか？"},
+    {en:"I'll take this one",ja:"これをください"},
+    {en:"Can I take a photo?",ja:"写真を撮ってもいいですか？"},
+    {en:"Do you have a menu?",ja:"メニューはありますか？"},
+    {en:"One more, please",ja:"もう一つください"},
+    {en:"Is this seat taken?",ja:"ここは空いていますか？"},
+    {en:"Can I have the Wi-Fi password?",ja:"Wi-Fiのパスワードを教えてください"},
+    {en:"Where's the nearest station?",ja:"一番近い駅はどこですか？"},
+    {en:"I'd like to book a room",ja:"部屋を予約したいです"},
+    {en:"What time does it open?",ja:"何時に開きますか？"},
   ]},
 };
 
-// ─────────────────────────────────────────────
-// BeatMachine — Stay/trap vibe (170 BPM, F minor)
-// ─────────────────────────────────────────────
+// ════════════════════════════════════════════
+// BeatMachine — Song structure + 音ハメ callbacks
+// Sections: quiet (8 bars) → build (4 bars) → drop (16 bars) → repeat
+// ════════════════════════════════════════════
 class BeatMachine {
   constructor() {
-    this.ctx       = null;
-    this.masterGain = null;
-    this.duckGain  = null;
-    this.reverbNode = null;
-    this.reverbSend = null;
-    this.bpm       = 140;
-    this.playing   = false;
-    this.step      = 0;
-    this.nextTime  = 0;
-    this.timerID   = null;
+    this.ctx = null; this.masterGain = null; this.duckGain = null;
+    this.reverbNode = null; this.reverbSend = null;
+    this.bpm = 140; this.playing = false;
+    this.step = 0; this.nextTime = 0; this.timerID = null;
+    this.barCount = 0;
+    this.section = 'quiet'; // 'quiet' | 'build' | 'drop'
+    // Callbacks (set from outside)
+    this.onKick    = null;
+    this.onSnare   = null;
+    this.onSection = null; // (sectionName) => void
   }
 
-  distCurve(amount) {
-    const n = 256, c = new Float32Array(n);
-    for (let i = 0; i < n; i++) {
-      const x = (i * 2 / n) - 1;
-      c[i] = ((Math.PI + amount) * x) / (Math.PI + amount * Math.abs(x));
-    }
+  distCurve(a) {
+    const n=256,c=new Float32Array(n);
+    for(let i=0;i<n;i++){const x=(i*2/n)-1;c[i]=((Math.PI+a)*x)/(Math.PI+a*Math.abs(x));}
     return c;
   }
 
   async init() {
-    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-
-    // Signal chain: instruments → duckGain → masterGain → compressor → out
-    this.duckGain   = this.ctx.createGain();   this.duckGain.gain.value = 1;
-    this.masterGain = this.ctx.createGain();   this.masterGain.gain.value = 0.72;
-
+    this.ctx = new (window.AudioContext||window.webkitAudioContext)();
+    this.duckGain = this.ctx.createGain(); this.duckGain.gain.value = 1;
+    this.masterGain = this.ctx.createGain(); this.masterGain.gain.value = 0.72;
     const comp = this.ctx.createDynamicsCompressor();
-    comp.threshold.value = -18; comp.knee.value = 6;
-    comp.ratio.value = 4;       comp.attack.value = 0.003; comp.release.value = 0.25;
-
+    comp.threshold.value=-18; comp.knee.value=6; comp.ratio.value=4;
+    comp.attack.value=0.003; comp.release.value=0.25;
     this.duckGain.connect(this.masterGain);
-    this.masterGain.connect(comp);
-    comp.connect(this.ctx.destination);
+    this.masterGain.connect(comp); comp.connect(this.ctx.destination);
 
-    // Reverb (convolution with synthetic impulse)
     this.reverbNode = this.ctx.createConvolver();
-    const sr = this.ctx.sampleRate, len = sr * 1.8;
-    const imp = this.ctx.createBuffer(2, len, sr);
-    for (let c = 0; c < 2; c++) {
-      const d = imp.getChannelData(c);
-      for (let i = 0; i < len; i++) d[i] = (Math.random()*2-1) * Math.pow(1 - i/len, 2);
-    }
-    this.reverbNode.buffer = imp;
-    this.reverbSend = this.ctx.createGain(); this.reverbSend.gain.value = 0.28;
-    this.reverbNode.connect(this.reverbSend);
-    this.reverbSend.connect(this.masterGain);
+    const sr=this.ctx.sampleRate, len=sr*2;
+    const imp=this.ctx.createBuffer(2,len,sr);
+    for(let c=0;c<2;c++){const d=imp.getChannelData(c);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2);}
+    this.reverbNode.buffer=imp;
+    this.reverbSend=this.ctx.createGain(); this.reverbSend.gain.value=0.3;
+    this.reverbNode.connect(this.reverbSend); this.reverbSend.connect(this.masterGain);
   }
 
   out()  { return this.duckGain; }
   verb() { return this.reverbNode; }
 
   duck(on) {
-    if (!this.duckGain) return;
-    const t = this.ctx.currentTime;
+    if(!this.duckGain) return;
+    const t=this.ctx.currentTime;
     this.duckGain.gain.cancelScheduledValues(t);
-    this.duckGain.gain.setValueAtTime(this.duckGain.gain.value, t);
-    this.duckGain.gain.linearRampToValueAtTime(on ? 0.18 : 1.0, t + 0.35);
+    this.duckGain.gain.setValueAtTime(this.duckGain.gain.value,t);
+    this.duckGain.gain.linearRampToValueAtTime(on?0.15:1.0, t+0.35);
   }
 
   async start() {
-    if (!this.ctx) await this.init();
-    if (this.ctx.state === 'suspended') await this.ctx.resume();
-    this.playing  = true;
-    this.step     = 0;
-    this.nextTime = this.ctx.currentTime + 0.05;
+    if(!this.ctx) await this.init();
+    if(this.ctx.state==='suspended') await this.ctx.resume();
+    this.playing=true; this.step=0; this.barCount=0; this.section='quiet';
+    this.nextTime=this.ctx.currentTime+0.05;
     this._schedule();
   }
 
   stop() {
-    this.playing = false;
-    if (this.timerID) clearTimeout(this.timerID);
-    if (this.masterGain) {
-      const t = this.ctx.currentTime;
-      this.masterGain.gain.setTargetAtTime(0, t, 0.08);
-      setTimeout(() => { if (this.masterGain) this.masterGain.gain.value = 0.72; }, 600);
+    this.playing=false;
+    if(this.timerID) clearTimeout(this.timerID);
+    if(this.masterGain){
+      const t=this.ctx.currentTime;
+      this.masterGain.gain.setTargetAtTime(0,t,0.08);
+      setTimeout(()=>{if(this.masterGain) this.masterGain.gain.value=0.72;},600);
     }
+  }
+
+  _cb(fn, t) {
+    // Schedule a UI callback to fire at audio time t
+    const delay = Math.max(0, (t - this.ctx.currentTime) * 1000);
+    setTimeout(fn, delay);
   }
 
   _schedule() {
-    const stepDur = (60 / this.bpm) / 4; // 16th note duration (seconds)
-    while (this.nextTime < this.ctx.currentTime + 0.15) {
-      this._step(this.step % 32, this.nextTime, stepDur);
-      this.nextTime += stepDur;
+    const sd=(60/this.bpm)/4; // 16th note duration
+    while(this.nextTime < this.ctx.currentTime+0.15) {
+      // Bar start?
+      if(this.step % 16 === 0) this._onBarStart(this.nextTime, sd);
+      this._step(this.step, this.nextTime, sd);
+      this.nextTime += sd;
       this.step++;
     }
-    if (this.playing) this.timerID = setTimeout(() => this._schedule(), 20);
+    if(this.playing) this.timerID=setTimeout(()=>this._schedule(), 20);
+  }
+
+  _onBarStart(t, sd) {
+    // 28-bar cycle: 8 quiet + 4 build + 16 drop
+    const cyclePos = this.barCount % 28;
+    let newSection = cyclePos < 8 ? 'quiet' : cyclePos < 12 ? 'build' : 'drop';
+
+    if(newSection !== this.section) {
+      this.section = newSection;
+      if(this.onSection) this._cb(() => this.onSection(newSection), t);
+      // Sound events on section transitions
+      if(newSection === 'build') this._riser(t, sd * 16 * 4); // 4 bars riser
+      if(newSection === 'drop')  this._crash(t);
+    }
+    this.barCount++;
   }
 
   _step(step, t, sd) {
-    const bar = Math.floor(step / 16); // 0 or 1
-    const s   = step % 16;             // 0–15
-
-    // ── KICK (trap pattern)
-    const kick0 = [1,0,0,0, 0,0,1,0, 1,0,0,0, 0,1,0,0];
-    const kick1 = [1,0,0,0, 0,0,0,0, 1,0,1,0, 0,0,1,0];
-    if ((bar===0 ? kick0 : kick1)[s]) this._kick(t);
-
-    // ── SNARE / CLAP (beats 2 & 4)
-    if (s===4 || s===12) this._snare(t);
-
-    // ── HI-HAT 16ths (accented on downbeats)
-    const hhv = [.6,.25,.5,.25, .7,.25,.55,.25, .6,.25,.5,.25, .75,.25,.9,.35];
-    this._hihat(t, hhv[s] * 0.48);
-
-    // ── OPEN HAT
-    if (s===7 || (bar===1 && s===15)) this._openhat(t);
-
-    // ── 808 BASS (quarter notes) — A minor
-    // A1=55  F1=43.65  G1=49  C2=65.41  E2=82.41
-    const bass = [
-      [55.00, 55.00, 43.65, 49.00], // bar 0: A1 A1 F1 G1
-      [65.41, 82.41, 55.00, 49.00], // bar 1: C2 E2 A1 G1
-    ];
-    if (s % 4 === 0) this._808(t, bass[bar][s/4], sd * 3.85);
-
-    // ── SYNTH MELODY — Mii Channel chromatic descending riff
-    // A4=440 G#4=415.30 G4=392 F#4=369.99 F4=349.23 E4=329.63 Eb4=311.13 D4=293.66
-    const R = 0;
-    const mel = [
-      // bar 0: クロマチック降下 A4→D4
-      [440.00,R, 415.30,R, 392.00,R, 369.99,R, 349.23,R, 329.63,R, 311.13,R, 293.66,R],
-      // bar 1: 解決＋上昇フレーズ
-      [261.63,R, 329.63,R, 392.00,R, 440.00,R, 392.00,R, 329.63,R, 523.25,R, R,R],
-    ];
-    if (s % 2 === 0) {
-      const freq = mel[bar][s];
-      if (freq) this._mii(t, freq, sd * 1.6);
+    switch(this.section) {
+      case 'quiet': this._stepQuiet(step, t, sd); break;
+      case 'build': this._stepBuild(step, t, sd); break;
+      case 'drop':  this._stepDrop(step, t, sd);  break;
     }
-
-    // ── PAD CHORD — Am / FM
-    const chords = [
-      [[220.00, 261.63, 329.63]],  // bar 0: Am (A3,C4,E4)
-      [[174.61, 220.00, 261.63]],  // bar 1: FM (F3,A3,C4)
-    ];
-    if (s === 0) chords[bar][0].forEach(f => this._pad(t, f, sd * 15));
   }
 
+  // ── QUIET: pad + very sparse melody, no drums ──────────────────
+  _stepQuiet(step, t, sd) {
+    const s=step%16, bar2=Math.floor(step/16)%2;
+    // Pad every bar
+    if(s===0){
+      const pads=[[220,261.63,329.63],[174.61,220,261.63]];
+      pads[bar2].forEach(f=>this._pad(t,f,sd*15,0.035));
+    }
+    // Sparse half-note melody
+    const R=0;
+    const mel=[[440,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R],[R,R,R,R,R,R,R,R,261.63,R,R,R,R,R,R,R]];
+    if(s%2===0){const f=mel[bar2][s];if(f) this._mii(t,f*0.5,sd*7,0.06);}
+  }
+
+  // ── BUILD: hihat + bass beat 1 + more melody ───────────────────
+  _stepBuild(step, t, sd) {
+    const s=step%16, bar2=Math.floor(step/16)%2;
+    // Hi-hat (8th notes only)
+    if(s%2===0){const v=[.35,.35,.4,.35,.45,.35,.4,.35];this._hihat(t,v[s/2]*0.45);}
+    // Bass only on beat 1
+    if(s===0) this._808(t,55.00,sd*4*0.85);
+    // Pad
+    if(s===0){
+      const pads=[[220,261.63,329.63],[174.61,220,261.63]];
+      pads[bar2].forEach(f=>this._pad(t,f,sd*15,0.055));
+    }
+    // Quarter-note melody
+    const R=0;
+    const mel=[
+      [440,R,415.30,R,392,R,R,R, 349.23,R,329.63,R,R,R,R,R],
+      [261.63,R,329.63,R,392,R,440,R, R,R,329.63,R,R,R,R,R],
+    ];
+    if(s%2===0){const f=mel[bar2][s];if(f) this._mii(t,f,sd*1.8,0.14);}
+  }
+
+  // ── DROP: full trap beat ────────────────────────────────────────
+  _stepDrop(step, t, sd) {
+    const s=step%16, bar2=Math.floor(step/16)%2;
+
+    // Kick
+    const k0=[1,0,0,0, 0,0,1,0, 1,0,0,0, 0,1,0,0];
+    const k1=[1,0,0,0, 0,0,0,0, 1,0,1,0, 0,0,1,0];
+    if((bar2===0?k0:k1)[s]){
+      this._kick(t);
+      if(this.onKick) this._cb(this.onKick, t);
+    }
+    // Snare
+    if(s===4||s===12){
+      this._snare(t);
+      if(this.onSnare) this._cb(this.onSnare, t);
+    }
+    // Hi-hat 16ths
+    const hv=[.6,.22,.5,.22,.7,.22,.55,.22,.6,.22,.5,.22,.75,.22,.9,.3];
+    this._hihat(t,hv[s]*0.46);
+    // Open hat
+    if(s===7||(bar2===1&&s===15)) this._openhat(t);
+    // 808 bass
+    const bass=[[55,55,43.65,49],[65.41,82.41,55,49]];
+    if(s%4===0) this._808(t,bass[bar2][s/4],sd*3.85);
+    // Melody: Mii Channel chromatic descend
+    const R=0;
+    const mel=[
+      [440,R, 415.30,R, 392,R, 369.99,R, 349.23,R, 329.63,R, 311.13,R, 293.66,R],
+      [261.63,R, 329.63,R, 392,R, 440,R, 392,R, 329.63,R, 523.25,R, R,R],
+    ];
+    if(s%2===0){const f=mel[bar2][s];if(f) this._mii(t,f,sd*1.6);}
+    // Pad
+    const ch=[[[220,261.63,329.63]],[[174.61,220,261.63]]];
+    if(s===0) ch[bar2][0].forEach(f=>this._pad(t,f,sd*15));
+  }
+
+  // ── Sounds ────────────────────────────────────────────────────
   _kick(t) {
-    const {ctx} = this;
-    const osc = ctx.createOscillator(), g = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(130, t);
-    osc.frequency.exponentialRampToValueAtTime(38, t + 0.13);
-    g.gain.setValueAtTime(1.6, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + 0.38);
-    osc.connect(g); g.connect(this.out());
-    osc.start(t); osc.stop(t + 0.4);
+    const{ctx}=this,osc=ctx.createOscillator(),g=ctx.createGain();
+    osc.type='sine';
+    osc.frequency.setValueAtTime(130,t); osc.frequency.exponentialRampToValueAtTime(38,t+0.13);
+    g.gain.setValueAtTime(1.6,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.38);
+    osc.connect(g); g.connect(this.out()); osc.start(t); osc.stop(t+0.4);
   }
 
   _snare(t) {
-    const {ctx} = this;
-    // Noise layer
-    const nbuf = ctx.createBuffer(1, ctx.sampleRate*0.2, ctx.sampleRate);
-    const nd = nbuf.getChannelData(0);
-    for (let i=0;i<nbuf.length;i++) nd[i]=Math.random()*2-1;
-    const noise = ctx.createBufferSource(); noise.buffer = nbuf;
-    const bp = ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1800; bp.Q.value=0.6;
-    const ng = ctx.createGain();
-    ng.gain.setValueAtTime(0.85,t); ng.gain.exponentialRampToValueAtTime(0.001,t+0.2);
-    // Tone layer
-    const osc = ctx.createOscillator(), og = ctx.createGain();
-    osc.frequency.value = 185;
-    og.gain.setValueAtTime(0.55,t); og.gain.exponentialRampToValueAtTime(0.001,t+0.09);
-    noise.connect(bp); bp.connect(ng); ng.connect(this.out()); ng.connect(this.verb());
+    const{ctx}=this;
+    const nb=ctx.createBuffer(1,ctx.sampleRate*0.2,ctx.sampleRate),nd=nb.getChannelData(0);
+    for(let i=0;i<nb.length;i++) nd[i]=Math.random()*2-1;
+    const ns=ctx.createBufferSource(); ns.buffer=nb;
+    const bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1800; bp.Q.value=0.6;
+    const ng=ctx.createGain(); ng.gain.setValueAtTime(0.85,t); ng.gain.exponentialRampToValueAtTime(0.001,t+0.2);
+    const osc=ctx.createOscillator(),og=ctx.createGain();
+    osc.frequency.value=185; og.gain.setValueAtTime(0.5,t); og.gain.exponentialRampToValueAtTime(0.001,t+0.09);
+    ns.connect(bp); bp.connect(ng); ng.connect(this.out()); ng.connect(this.verb());
     osc.connect(og); og.connect(this.out());
-    noise.start(t); noise.stop(t+0.22); osc.start(t); osc.stop(t+0.1);
+    ns.start(t); ns.stop(t+0.22); osc.start(t); osc.stop(t+0.1);
   }
 
-  _hihat(t, vol) {
-    const {ctx} = this;
-    const buf = ctx.createBuffer(1, Math.ceil(ctx.sampleRate*0.05), ctx.sampleRate);
-    const d = buf.getChannelData(0); for(let i=0;i<buf.length;i++) d[i]=Math.random()*2-1;
-    const src = ctx.createBufferSource(); src.buffer = buf;
-    const hp = ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=9500;
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.04);
-    src.connect(hp); hp.connect(g); g.connect(this.out());
-    src.start(t); src.stop(t+0.05);
+  _hihat(t,vol) {
+    const{ctx}=this;
+    const buf=ctx.createBuffer(1,Math.ceil(ctx.sampleRate*0.05),ctx.sampleRate),d=buf.getChannelData(0);
+    for(let i=0;i<buf.length;i++) d[i]=Math.random()*2-1;
+    const src=ctx.createBufferSource(); src.buffer=buf;
+    const hp=ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=9500;
+    const g=ctx.createGain(); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.04);
+    src.connect(hp); hp.connect(g); g.connect(this.out()); src.start(t); src.stop(t+0.05);
   }
 
   _openhat(t) {
-    const {ctx} = this;
-    const buf = ctx.createBuffer(1, Math.ceil(ctx.sampleRate*0.22), ctx.sampleRate);
-    const d = buf.getChannelData(0); for(let i=0;i<buf.length;i++) d[i]=Math.random()*2-1;
-    const src = ctx.createBufferSource(); src.buffer = buf;
-    const hp = ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=8200;
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(0.3,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.22);
-    src.connect(hp); hp.connect(g); g.connect(this.out());
-    src.start(t); src.stop(t+0.25);
+    const{ctx}=this;
+    const buf=ctx.createBuffer(1,Math.ceil(ctx.sampleRate*0.22),ctx.sampleRate),d=buf.getChannelData(0);
+    for(let i=0;i<buf.length;i++) d[i]=Math.random()*2-1;
+    const src=ctx.createBufferSource(); src.buffer=buf;
+    const hp=ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=8200;
+    const g=ctx.createGain(); g.gain.setValueAtTime(0.3,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.22);
+    src.connect(hp); hp.connect(g); g.connect(this.out()); src.start(t); src.stop(t+0.25);
   }
 
-  _808(t, freq, dur) {
-    const {ctx} = this;
-    const osc = ctx.createOscillator();
-    const dist = ctx.createWaveShaper(); dist.curve=this.distCurve(25); dist.oversample='2x';
-    const g = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(freq*1.6,t);
-    osc.frequency.exponentialRampToValueAtTime(freq, t+0.07);
-    g.gain.setValueAtTime(1.3,t);
-    g.gain.setValueAtTime(1.3,t+dur*0.78);
-    g.gain.exponentialRampToValueAtTime(0.001,t+dur+0.12);
-    osc.connect(dist); dist.connect(g); g.connect(this.out());
-    osc.start(t); osc.stop(t+dur+0.2);
+  _808(t,freq,dur) {
+    const{ctx}=this;
+    const osc=ctx.createOscillator(),dist=ctx.createWaveShaper(),g=ctx.createGain();
+    dist.curve=this.distCurve(25); dist.oversample='2x'; osc.type='sine';
+    osc.frequency.setValueAtTime(freq*1.6,t); osc.frequency.exponentialRampToValueAtTime(freq,t+0.07);
+    g.gain.setValueAtTime(1.3,t); g.gain.setValueAtTime(1.3,t+dur*0.78); g.gain.exponentialRampToValueAtTime(0.001,t+dur+0.12);
+    osc.connect(dist); dist.connect(g); g.connect(this.out()); osc.start(t); osc.stop(t+dur+0.2);
   }
 
-  _piano(t, freq, dur) {
-    this._mii(t, freq, dur);
+  _mii(t,freq,dur,vol=0.22) {
+    const{ctx}=this;
+    const osc=ctx.createOscillator(),lp=ctx.createBiquadFilter(),g=ctx.createGain();
+    osc.type='square'; osc.frequency.value=freq;
+    lp.type='lowpass'; lp.frequency.value=1800; lp.Q.value=0.4;
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+0.004);
+    g.gain.setValueAtTime(vol,t+dur*0.65); g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+    osc.connect(lp); lp.connect(g); g.connect(this.out()); g.connect(this.verb());
+    osc.start(t); osc.stop(t+dur+0.05);
   }
 
-  _mii(t, freq, dur) {
-    const {ctx} = this;
-    // Square wave (chiptune/video game feel) + lowpass to tame harshness
-    const osc = ctx.createOscillator();
-    const lp  = ctx.createBiquadFilter();
-    const g   = ctx.createGain();
-    osc.type = 'square';
-    osc.frequency.value = freq;
-    lp.type = 'lowpass'; lp.frequency.value = 1800; lp.Q.value = 0.4;
-    // Staccato envelope
-    g.gain.setValueAtTime(0, t);
-    g.gain.linearRampToValueAtTime(0.22, t + 0.004);
-    g.gain.setValueAtTime(0.22, t + dur * 0.65);
-    g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-    osc.connect(lp); lp.connect(g);
-    g.connect(this.out()); g.connect(this.verb());
-    osc.start(t); osc.stop(t + dur + 0.05);
+  _pad(t,freq,dur,vol=0.06) {
+    const{ctx}=this;
+    const osc=ctx.createOscillator(),lp=ctx.createBiquadFilter(),g=ctx.createGain();
+    lp.type='lowpass'; lp.frequency.value=700; osc.type='sawtooth'; osc.frequency.value=freq;
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+0.5);
+    g.gain.setValueAtTime(vol,t+dur-0.8); g.gain.linearRampToValueAtTime(0,t+dur);
+    osc.connect(lp); lp.connect(g); g.connect(this.verb()); osc.start(t); osc.stop(t+dur+0.1);
   }
 
-  _pad(t, freq, dur) {
-    const {ctx} = this;
-    const osc = ctx.createOscillator();
-    const lp = ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=800;
-    const g = ctx.createGain();
-    osc.type='sawtooth'; osc.frequency.value=freq;
-    g.gain.setValueAtTime(0,t);
-    g.gain.linearRampToValueAtTime(0.06,t+0.4);
-    g.gain.setValueAtTime(0.06,t+dur-0.6);
-    g.gain.linearRampToValueAtTime(0,t+dur);
-    osc.connect(lp); lp.connect(g); g.connect(this.verb());
-    osc.start(t); osc.stop(t+dur+0.1);
+  _riser(startT, dur) {
+    const{ctx}=this;
+    const osc=ctx.createOscillator(),g=ctx.createGain();
+    osc.type='sawtooth';
+    osc.frequency.setValueAtTime(180,startT); osc.frequency.exponentialRampToValueAtTime(1400,startT+dur);
+    g.gain.setValueAtTime(0,startT); g.gain.linearRampToValueAtTime(0.12,startT+dur*0.75); g.gain.linearRampToValueAtTime(0,startT+dur);
+    osc.connect(g); g.connect(this.verb()); osc.start(startT); osc.stop(startT+dur+0.1);
+  }
+
+  _crash(t) {
+    const{ctx}=this;
+    const len=Math.ceil(ctx.sampleRate*2.5),buf=ctx.createBuffer(1,len,ctx.sampleRate),d=buf.getChannelData(0);
+    for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,0.6);
+    const src=ctx.createBufferSource(); src.buffer=buf;
+    const hp=ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=5000;
+    const g=ctx.createGain(); g.gain.setValueAtTime(0.55,t); g.gain.exponentialRampToValueAtTime(0.001,t+2.5);
+    src.connect(hp); hp.connect(g); g.connect(this.out()); src.start(t); src.stop(t+2.6);
   }
 }
 
-// ─────────────────────────────────────────────
+// ════════════════════════════════════════════
 // App state
-// ─────────────────────────────────────────────
-let cat     = 'daily';
-let idx     = 0;
-let playing = false;
-let repeat  = false;
-let rate    = 0.85;
-let speaking = false;
-let beatTick = null, beatPos = 0, autoTimer = null;
-let musicOn = false;
-let voices  = [];
+// ════════════════════════════════════════════
+let cat='daily', idx=0, playing=false, repeat=false, rate=0.85;
+let speaking=false, beatTick=null, beatPos=0, autoTimer=null;
+let musicOn=false, voices=[];
 
 const beat = new BeatMachine();
 
-function loadVoices() {
-  voices = speechSynthesis.getVoices();
-  if (!voices.length) speechSynthesis.addEventListener('voiceschanged', () => { voices = speechSynthesis.getVoices(); }, {once:true});
-}
+// ── TTS helpers ──
+function loadVoices(){voices=speechSynthesis.getVoices();if(!voices.length)speechSynthesis.addEventListener('voiceschanged',()=>{voices=speechSynthesis.getVoices();},{once:true});}
 loadVoices();
-
-function bestVoice(lang) {
-  const prefs = lang==='en-US'
-    ? ['Samantha','Google US English','en-US','en_US','en']
-    : ['Kyoko','Google 日本語','ja-JP','ja_JP','ja'];
-  for (const p of prefs) {
-    const v = voices.find(v => v.name.includes(p) || v.lang.startsWith(p));
-    if (v) return v;
-  }
-  return voices.find(v => v.lang.startsWith(lang.split('-')[0])) || null;
+function bestVoice(lang){
+  const p=lang==='en-US'?['Samantha','Google US English','en-US','en_US','en']:['Kyoko','Google 日本語','ja-JP','ja_JP','ja'];
+  for(const s of p){const v=voices.find(v=>v.name.includes(s)||v.lang.startsWith(s));if(v)return v;}
+  return voices.find(v=>v.lang.startsWith(lang.split('-')[0]))||null;
 }
-
-function tts(text, lang) {
-  return new Promise(res => {
-    if (!('speechSynthesis' in window)) return res();
+function tts(text,lang){
+  return new Promise(res=>{
+    if(!('speechSynthesis'in window))return res();
     speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
+    const u=new SpeechSynthesisUtterance(text);
     u.lang=lang; u.rate=rate; u.pitch=1.05; u.volume=1;
-    const v = bestVoice(lang); if (v) u.voice=v;
-    u.onend=res; u.onerror=res;
-    speechSynthesis.speak(u);
+    const v=bestVoice(lang); if(v) u.voice=v;
+    u.onend=res; u.onerror=res; speechSynthesis.speak(u);
   });
 }
 
-// ─────────────────────────────────────────────
-// DOM refs
-// ─────────────────────────────────────────────
-const catsEl   = document.getElementById('cats');
-const winEl    = document.getElementById('phraseWindow');
-const speakEl  = document.getElementById('speakBars');
-const modeLbl  = document.getElementById('modeLbl');
-const beatRow  = document.getElementById('beatRow');
-const bDots    = beatRow.querySelectorAll('.bd');
-const counter  = document.getElementById('counter');
-const pfill    = document.getElementById('progressFill');
-const catLabel = document.getElementById('catLabel');
-const playBtn  = document.getElementById('playBtn');
-const musicBtn = document.getElementById('musicBtn');
-const hint     = document.getElementById('musicHint');
+// ── DOM refs ──
+const catsEl  =document.getElementById('cats');
+const winEl   =document.getElementById('phraseWindow');
+const speakEl =document.getElementById('speakBars');
+const modeLbl =document.getElementById('modeLbl');
+const beatRow =document.getElementById('beatRow');
+const bDots   =beatRow.querySelectorAll('.bd');
+const counter =document.getElementById('counter');
+const pfill   =document.getElementById('progressFill');
+const catLabel=document.getElementById('catLabel');
+const playBtn =document.getElementById('playBtn');
+const musicBtn=document.getElementById('musicBtn');
+const hint    =document.getElementById('musicHint');
+const badge   =document.getElementById('sectionBadge');
 
-// ─────────────────────────────────────────────
-// Render
-// ─────────────────────────────────────────────
-function renderCats() {
-  catsEl.innerHTML = '';
-  Object.entries(DATA).forEach(([key, d]) => {
-    const b = document.createElement('button');
-    b.className = 'cat' + (key===cat ? ' active' : '');
-    b.textContent = d.title;
-    b.onclick = () => { stopAll(); cat=key; idx=0; renderCats(); renderWindow(); };
+// ── Render categories ──
+function renderCats(){
+  catsEl.innerHTML='';
+  Object.entries(DATA).forEach(([key,d])=>{
+    const b=document.createElement('button');
+    b.className='cat'+(key===cat?' active':''); b.textContent=d.title;
+    b.onclick=()=>{stopAll();cat=key;idx=0;renderCats();renderWindow();};
     catsEl.appendChild(b);
   });
 }
 
-function renderWindow() {
-  const phrases = DATA[cat].phrases;
-  winEl.innerHTML = '';
-  for (let offset=-2; offset<=2; offset++) {
-    const i = (idx+offset+phrases.length) % phrases.length;
-    const p = phrases[i];
-    const div = document.createElement('div');
-    div.className='ph-item'; div.dataset.pos=offset;
+function renderWindow(){
+  const phrases=DATA[cat].phrases; winEl.innerHTML='';
+  for(let o=-2;o<=2;o++){
+    const i=(idx+o+phrases.length)%phrases.length,p=phrases[i];
+    const div=document.createElement('div'); div.className='ph-item'; div.dataset.pos=o;
     div.innerHTML=`<div class="ph-en">${p.en}</div><div class="ph-ja">${p.ja}</div>`;
-    div.onclick = () => {
-      const ni = (idx+offset+phrases.length) % phrases.length;
-      idx=ni; renderWindow(); updateInfo();
-      if (!playing) speakPhrase();
-    };
+    div.onclick=()=>{const ni=(idx+o+phrases.length)%phrases.length;idx=ni;renderWindow();updateInfo();if(!playing)speakPhrase();};
     winEl.appendChild(div);
   }
   updateInfo();
 }
 
-function updateInfo() {
-  const n = DATA[cat].phrases.length;
-  counter.textContent = `${idx+1} / ${n}`;
-  pfill.style.width   = `${((idx+1)/n)*100}%`;
-  catLabel.textContent = DATA[cat].title;
-}
-
-// ─────────────────────────────────────────────
-// TTS + play loop
-// ─────────────────────────────────────────────
-async function speakPhrase() {
-  const p = DATA[cat].phrases[idx];
-  speaking = true;
-  speakEl.classList.remove('off');
-  beat.duck(true);
-
-  modeLbl.textContent = '英語を聞こう 👂';
-  await tts(p.en, 'en-US');
-  if (!speaking) return;
-
-  await new Promise(r => setTimeout(r, 320));
-  if (!speaking) return;
-
-  modeLbl.textContent = '日本語で確認 ✓';
-  await tts(p.ja, 'ja-JP');
-
-  beat.duck(false);
-  speakEl.classList.add('off');
-  modeLbl.textContent = '';
-  speaking = false;
-
-  if (playing) {
-    autoTimer = setTimeout(() => {
-      if (!playing) return;
-      if (repeat) { speakPhrase(); return; }
-      const phrases = DATA[cat].phrases;
-      idx = (idx+1) % phrases.length;
-      renderWindow();
-      speakPhrase();
-    }, 800);
-  }
-}
-
-function stopAll() {
-  playing=false; speaking=false;
-  clearTimeout(autoTimer);
-  speechSynthesis.cancel();
-  speakEl.classList.add('off');
-  modeLbl.textContent='';
-  stopVisualBeat();
-  playBtn.textContent='▶';
-  playBtn.classList.remove('playing');
-  beat.duck(false);
-}
-
-// ─────────────────────────────────────────────
-// Visual beat (synced to music tempo)
-// ─────────────────────────────────────────────
-function startVisualBeat() {
-  stopVisualBeat();
-  beatPos=0;
-  // 16th note at 170 BPM = 60/170/4 s ≈ 88 ms
-  const ms = (60000/140/4);
-  beatTick = setInterval(() => {
-    bDots.forEach(d=>d.classList.remove('lit'));
-    bDots[beatPos % bDots.length].classList.add('lit');
-    beatPos++;
-  }, ms);
-}
-function stopVisualBeat() {
-  clearInterval(beatTick);
-  bDots.forEach(d=>d.classList.remove('lit'));
-}
-
-// ─────────────────────────────────────────────
-// Controls
-// ─────────────────────────────────────────────
-playBtn.addEventListener('click', () => {
-  if (playing) {
-    stopAll();
-  } else {
-    playing=true;
-    playBtn.textContent='⏸'; playBtn.classList.add('playing');
-    startVisualBeat();
-    if (!speaking) speakPhrase();
-  }
-});
-
-document.getElementById('prevBtn').addEventListener('click', () => {
-  speechSynthesis.cancel(); speaking=false; clearTimeout(autoTimer);
+function updateInfo(){
   const n=DATA[cat].phrases.length;
-  idx=(idx-1+n)%n; renderWindow();
-  if (playing) speakPhrase();
+  counter.textContent=`${idx+1} / ${n}`;
+  pfill.style.width=`${((idx+1)/n)*100}%`;
+  catLabel.textContent=DATA[cat].title;
+}
+
+// ── TTS playback ──
+async function speakPhrase(){
+  const p=DATA[cat].phrases[idx];
+  speaking=true; speakEl.classList.remove('off'); beat.duck(true);
+  modeLbl.textContent='英語を聞こう 👂';
+  await tts(p.en,'en-US'); if(!speaking)return;
+  await new Promise(r=>setTimeout(r,300)); if(!speaking)return;
+  modeLbl.textContent='日本語で確認 ✓';
+  await tts(p.ja,'ja-JP');
+  beat.duck(false); speakEl.classList.add('off'); modeLbl.textContent=''; speaking=false;
+  if(playing){
+    autoTimer=setTimeout(()=>{
+      if(!playing)return;
+      if(repeat){speakPhrase();return;}
+      idx=(idx+1)%DATA[cat].phrases.length; renderWindow(); speakPhrase();
+    },700);
+  }
+}
+
+function stopAll(){
+  playing=false; speaking=false; clearTimeout(autoTimer); speechSynthesis.cancel();
+  speakEl.classList.add('off'); modeLbl.textContent=''; stopVisualBeat();
+  playBtn.textContent='▶'; playBtn.classList.remove('playing'); beat.duck(false);
+}
+
+// ── Visual beat ──
+function startVisualBeat(){
+  stopVisualBeat(); beatPos=0;
+  const ms=60000/140/4; // 16th note at 140 BPM
+  beatTick=setInterval(()=>{
+    bDots.forEach(d=>d.classList.remove('lit'));
+    bDots[beatPos%bDots.length].classList.add('lit');
+    beatPos++;
+  },ms);
+}
+function stopVisualBeat(){clearInterval(beatTick);bDots.forEach(d=>d.classList.remove('lit'));}
+
+// ── 音ハメ callbacks ──
+beat.onKick = () => {
+  const el=winEl.querySelector('.ph-item[data-pos="0"]');
+  if(!el)return;
+  el.classList.remove('kick-hit');
+  void el.offsetWidth;
+  el.classList.add('kick-hit');
+  setTimeout(()=>el.classList.remove('kick-hit'),280);
+  // Body flash
+  document.body.style.backgroundColor='#1c0800';
+  setTimeout(()=>document.body.style.backgroundColor='',70);
+};
+
+beat.onSnare = () => {
+  const el=winEl.querySelector('.ph-item[data-pos="0"]');
+  if(!el)return;
+  el.classList.remove('snare-hit');
+  void el.offsetWidth;
+  el.classList.add('snare-hit');
+  setTimeout(()=>el.classList.remove('snare-hit'),180);
+};
+
+beat.onSection = (section) => {
+  document.body.className = document.body.className.replace(/s-\w+/g,'').trim() + ` s-${section}`;
+  const labels={quiet:'🌙 quiet — 静かなパート',build:'⬆️ build — 盛り上がり中',drop:'🔥 drop — ノリノリ！'};
+  badge.textContent = labels[section]||'';
+};
+
+// ── Controls ──
+playBtn.addEventListener('click',()=>{
+  if(playing){stopAll();}
+  else{playing=true;playBtn.textContent='⏸';playBtn.classList.add('playing');startVisualBeat();if(!speaking)speakPhrase();}
 });
 
-document.getElementById('nextBtn').addEventListener('click', () => {
-  speechSynthesis.cancel(); speaking=false; clearTimeout(autoTimer);
-  idx=(idx+1)%DATA[cat].phrases.length; renderWindow();
-  if (playing) speakPhrase();
+document.getElementById('prevBtn').addEventListener('click',()=>{
+  speechSynthesis.cancel();speaking=false;clearTimeout(autoTimer);
+  idx=(idx-1+DATA[cat].phrases.length)%DATA[cat].phrases.length;renderWindow();
+  if(playing)speakPhrase();
 });
 
-document.getElementById('repeatBtn').addEventListener('click', function() {
-  repeat=!repeat; this.classList.toggle('icon-active',repeat);
+document.getElementById('nextBtn').addEventListener('click',()=>{
+  speechSynthesis.cancel();speaking=false;clearTimeout(autoTimer);
+  idx=(idx+1)%DATA[cat].phrases.length;renderWindow();
+  if(playing)speakPhrase();
 });
 
-// Music toggle
-musicBtn.addEventListener('click', async () => {
-  musicOn = !musicOn;
-  if (musicOn) {
+document.getElementById('repeatBtn').addEventListener('click',function(){
+  repeat=!repeat;this.classList.toggle('icon-active',repeat);
+});
+
+musicBtn.addEventListener('click',async()=>{
+  musicOn=!musicOn;
+  if(musicOn){
     await beat.start();
     startVisualBeat();
     musicBtn.textContent='🔇';
     musicBtn.classList.remove('music-off');
-    hint.textContent='🎵 Mii Channel × Dubtendo スタイル再生中';
+    hint.textContent='🎵 Mii Channel × Dubtendo スタイル';
   } else {
     beat.stop();
-    if (!playing) stopVisualBeat();
+    if(!playing)stopVisualBeat();
     musicBtn.textContent='🎵';
     musicBtn.classList.add('music-off');
     hint.textContent='🎵 タップして音楽スタート';
+    document.body.className=document.body.className.replace(/s-\w+/g,'').trim()+' s-quiet';
+    badge.textContent='';
   }
 });
 
-// Speed
-document.querySelectorAll('.spd').forEach(b => {
-  b.addEventListener('click', function() {
+document.querySelectorAll('.spd').forEach(b=>{
+  b.addEventListener('click',function(){
     document.querySelectorAll('.spd').forEach(x=>x.classList.remove('active'));
-    this.classList.add('active');
-    rate = parseFloat(this.dataset.rate);
+    this.classList.add('active'); rate=parseFloat(this.dataset.rate);
   });
 });
 
-// ─────────────────────────────────────────────
-// Particles
-// ─────────────────────────────────────────────
-function spawnParticles() {
+// ── Particles ──
+function spawnParticles(){
   const el=document.getElementById('particles');
   const colors=['#ff6b00','#ffa040','#cc3300','#fff','#ffcc00'];
-  for (let i=0;i<22;i++) {
+  for(let i=0;i<22;i++){
     const p=document.createElement('div'); p.className='particle';
-    p.style.cssText=`
-      left:${Math.random()*100}vw;
-      animation-duration:${6+Math.random()*12}s;
-      animation-delay:${Math.random()*12}s;
-      background:${colors[i%colors.length]};
-      opacity:${0.2+Math.random()*0.35};
-      width:${1+Math.random()*2}px;height:${1+Math.random()*2}px;`;
+    p.style.cssText=`left:${Math.random()*100}vw;animation-duration:${6+Math.random()*12}s;animation-delay:${Math.random()*12}s;background:${colors[i%colors.length]};opacity:${0.2+Math.random()*0.35};width:${1+Math.random()*2}px;height:${1+Math.random()*2}px;`;
     el.appendChild(p);
   }
 }
 
-document.addEventListener('visibilitychange', () => { if(document.hidden) stopAll(); });
-
-renderCats();
-renderWindow();
-spawnParticles();
+document.addEventListener('visibilitychange',()=>{if(document.hidden)stopAll();});
+renderCats(); renderWindow(); spawnParticles();
 </script>
 </body>
 </html>
-
