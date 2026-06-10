@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>英語フレーズ100 🎵 歌で覚える英語</title>
+  <style>
+    :root {
+      --bg: #0a0a1a;
+      --pink: #ff2d9f;
+      --cyan: #00e5ff;
+      --purple: #7c3aed;
+      --dim: rgba(255,255,255,0.35);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: #fff;
+      font-family: 'Hiragino Sans', 'Noto Sans JP', 'Yu Gothic', sans-serif;
+      min-height: 100dvh;
+      max-width: 480px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .bg-aura {
+      position: fixed; inset: 0; z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 20% 40%, rgba(124,58,237,0.35) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 35% at 80% 60%, rgba(255,45,159,0.25) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 30% at 50% 90%, rgba(0,229,255,0.15) 0%, transparent 70%);
+      animation: auraPulse 5s ease-in-out infinite;
+    }
+    @keyframes auraPulse {
+      0%,100% { opacity: 0.7; } 50% { opacity: 1; }
+    }
+
+    #particles { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
+    .particle {
+      position: absolute; border-radius: 50%;
+      animation: floatUp linear infinite;
+    }
+    @keyframes floatUp {
+      from { transform: translateY(105vh) translateX(0px); opacity: 0.8; }
+      to   { transform: translateY(-5vh)  translateX(30px); opacity: 0; }
+    }
+
+    header, .cats, .stage, .info-row, .controls, .speeds {
+      position: relative; z-index: 10;
+    }
+
+    header { text-align: center; padding: 16px 16px 8px; }
+    .title {
+      font-size: 1.1rem; font-weight: 900;
+      background: linear-gradient(135deg, var(--pink), var(--cyan));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 0 8px var(--pink));
+    }
+    .subtitle { font-size: 0.7rem; color: var(--cyan); margin-top: 3px; opacity: 0.85; }
+
+    .cats {
+      display: flex; gap: 7px; padding: 6px 14px;
+      overflow-x: auto; scrollbar-width: none;
+    }
+    .cats::-webkit-scrollbar { display: none; }
+    .cat {
+      flex-shrink: 0; padding: 5px 13px; border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.04); color: var(--dim);
+      font-size: 0.72rem; cursor: pointer; transition: all 0.25s; white-space: nowrap;
+    }
+    .cat.active {
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      border-color: transparent; color: #fff; font-weight: 700;
+      box-shadow: 0 0 14px rgba(255,45,159,0.45);
+    }
+
+    .stage {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; padding: 8px 0;
+    }
+
+    .speak-bars { display: flex; gap: 3px; align-items: flex-end; height: 22px; margin-bottom: 8px; }
+    .speak-bars.off { opacity: 0; }
+    .sb { width: 4px; border-radius: 2px; background: var(--cyan); animation: sbPulse 0.5s ease-in-out infinite; }
+    .sb:nth-child(1){animation-delay:0s} .sb:nth-child(2){animation-delay:.08s}
+    .sb:nth-child(3){animation-delay:.16s} .sb:nth-child(4){animation-delay:.24s}
+    .sb:nth-child(5){animation-delay:.32s}
+    @keyframes sbPulse { 0%,100% { height: 4px; } 50% { height: 18px; } }
+
+    .phrase-window {
+      width: 100%; display: flex; flex-direction: column; align-items: center;
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%);
+      mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%);
+    }
+    .ph-item {
+      width: 100%; text-align: center; padding: 5px 20px;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      cursor: pointer; transition: all 0.45s cubic-bezier(0.4,0,0.2,1);
+    }
+    .ph-en { font-weight: 900; line-height: 1.2; transition: all 0.45s; }
+    .ph-ja { font-size: 0.85rem; transition: all 0.45s; }
+
+    .ph-item[data-pos="0"] .ph-en {
+      font-size: 1.85rem; color: var(--pink);
+      text-shadow: 0 0 18px var(--pink), 0 0 36px rgba(255,45,159,0.5);
+      animation: phraseIn 0.35s ease-out;
+    }
+    .ph-item[data-pos="0"] .ph-ja { font-size: 1rem; color: var(--cyan); text-shadow: 0 0 10px var(--cyan); }
+    .ph-item[data-pos="1"] .ph-en, .ph-item[data-pos="-1"] .ph-en { font-size: 1.2rem; color: rgba(255,255,255,0.5); }
+    .ph-item[data-pos="1"] .ph-ja, .ph-item[data-pos="-1"] .ph-ja { color: rgba(255,255,255,0.28); font-size: 0.75rem; }
+    .ph-item[data-pos="2"] .ph-en, .ph-item[data-pos="-2"] .ph-en { font-size: 0.9rem; color: rgba(255,255,255,0.18); }
+    .ph-item[data-pos="2"] .ph-ja, .ph-item[data-pos="-2"] .ph-ja { display: none; }
+    @keyframes phraseIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
+
+    .mode-lbl { font-size: 0.7rem; color: var(--pink); letter-spacing: 0.06em; margin-top: 8px; min-height: 16px; text-shadow: 0 0 8px var(--pink); }
+
+    .beat-row { display: flex; gap: 7px; align-items: center; margin-top: 10px; }
+    .bd { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: all 0.1s; }
+    .bd.lit { background: var(--pink); box-shadow: 0 0 10px var(--pink); transform: scale(1.6); }
+
+    .info-row {
+      display: flex; align-items: center; justify-content: center;
+      gap: 12px; padding: 5px 20px 3px; font-size: 0.72rem; color: var(--dim);
+    }
+    .progress-wrap { flex: 1; max-width: 180px; height: 3px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(to right, var(--purple), var(--pink)); border-radius: 3px; transition: width 0.4s; }
+
+    .controls { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 8px 20px; }
+    .cbtn {
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 50%; width: 44px; height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: #fff; font-size: 1rem; transition: all 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .cbtn:active { transform: scale(0.9); }
+    .cbtn.icon-active { color: var(--cyan); border-color: var(--cyan); box-shadow: 0 0 10px rgba(0,229,255,0.3); }
+    .cbtn.music-off { color: rgba(255,255,255,0.3); border-color: rgba(255,255,255,0.1); }
+    .play-cbtn {
+      width: 60px; height: 60px;
+      background: linear-gradient(135deg, var(--purple), var(--pink));
+      border: none; font-size: 1.4rem;
+      box-shadow: 0 0 28px rgba(255,45,159,0.55);
+    }
+    .play-cbtn.playing { background: linear-gradient(135deg, #1e1e3a, var(--purple)); box-shadow: 0 0 28px rgba(124,58,237,0.6); }
+
+    .speeds { display: flex; gap: 8px; justify-content: center; padding: 4px 20px 14px; }
+    .spd {
+      padding: 4px 13px; border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.15); background: transparent;
+      color: var(--dim); font-size: 0.72rem; cursor: pointer; transition: all 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .spd.active { background: var(--cyan); border-color: transparent; color: var(--bg); font-weight: 800; }
+
+    .music-hint { position: relative; z-index: 10; text-align: center; font-size: 0.65rem; color: rgba(255,255,255,0.3); padding-bottom: 8px; }
+  </style>
+</head>
+<body>
+<div class="bg-aura"></div>
+<div id="particles"></div>
+
+<header>
+  <div class="title">🎵 流暢に話すための英語フレーズ100</div>
+  <div class="subtitle">ネイティブが実際に使うフレーズを歌で覚えよう</div>
+</header>
+
+<div class="cats" id="cats"></div>
+
+<div class="stage">
+  <div class="speak-bars off" id="speakBars">
+    <div class="sb"></div><div class="sb"></div><div class="sb"></div>
+    <div class="sb"></div><div class="sb"></div>
+  </div>
+  <div class="phrase-window" id="phraseWindow"></div>
+  <div class="mode-lbl" id="modeLbl"></div>
+  <div class="beat-row" id="beatRow">
+    <div class="bd"></div><div class="bd"></div><div class="bd"></div>
+    <div class="bd"></div><div class="bd"></div><div class="bd"></div>
+    <div class="bd"></div><div class="bd"></div>
+  </div>
+</div>
+
+<div class="info-row">
+  <span id="counter">1 / 15</span>
+  <div class="progress-wrap"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  <span id="catLabel"></span>
+</div>
+
+<div class="controls">
+  <button class="cbtn" id="musicBtn" title="音楽ON/OFF">🎵</button>
+  <button class="cbtn" id="prevBtn">⏮</button>
+  <button class="cbtn play-cbtn" id="playBtn">▶</button>
+  <button class="cbtn" id="nextBtn">⏭</button>
+  <button class="cbtn" id="repeatBtn" title="リピート">🔁</button>
+</div>
+
+<div class="speeds">
+  <button class="spd" data-rate="0.65">ゆっくり</button>
+  <button class="spd active" data-rate="0.85">普通</button>
+  <button class="spd" data-rate="1.1">はやく</button>
+</div>
+
+<div class="music-hint" id="musicHint">🎵 タップして音楽スタート</div>
+
+<script>
+// ─────────────────────────────────────────────
+// Phrase data
+// ─────────────────────────────────────────────
+const DATA = {
+  daily: { title: "日常会話", phrases: [
+    { en: "I'm not sure yet",          ja: "まだ分かりません" },
+    { en: "Give me a second",          ja: "ちょっと待ってください" },
+    { en: "I'm running late",          ja: "遅れています" },
+    { en: "That's a good point",       ja: "それは一理ありますね" },
+    { en: "I didn't catch that",       ja: "聞き取れませんでした" },
+    { en: "Could you say that again?", ja: "もう一度言ってください" },
+    { en: "You're welcome",            ja: "どういたしまして" },
+    { en: "Don't worry about it",      ja: "お気になさらず" },
+    { en: "I have no idea",            ja: "全然わかりません" },
+    { en: "That makes sense",          ja: "なるほどですね" },
+    { en: "I'm on it",                 ja: "対応します" },
+    { en: "Take your time",            ja: "ゆっくりどうぞ" },
+    { en: "Let me think about it",     ja: "考えさせてください" },
+    { en: "What's up?",                ja: "どうしたの？" },
+    { en: "Never mind",                ja: "気にしないで" },
+  ]},
+  business: { title: "ビジネス", phrases: [
+    { en: "I'll get back to you",         ja: "折り返し連絡します" },
+    { en: "Let's schedule a meeting",     ja: "会議を設定しましょう" },
+    { en: "What's the deadline?",         ja: "締め切りはいつですか" },
+    { en: "That sounds like a plan",      ja: "それはうまくいきそうです" },
+    { en: "Could you check this?",        ja: "ご確認いただけますか" },
+    { en: "I'll look into it",            ja: "調べてみます" },
+    { en: "Let's move forward",           ja: "進めましょう" },
+    { en: "What's the status?",           ja: "進捗を教えてください" },
+    { en: "Just to be safe",              ja: "念のため確認します" },
+    { en: "That's a tough one",           ja: "それは難しいですね" },
+    { en: "I think we can make it work",  ja: "うまくできると思います" },
+    { en: "Let me loop you in",           ja: "あなたも含めますね" },
+    { en: "Can we push the deadline?",    ja: "締め切りを延ばせますか" },
+    { en: "I'll take care of it",         ja: "任せてください" },
+    { en: "Does that work for you?",      ja: "それで大丈夫ですか？" },
+  ]},
+  emotion: { title: "気持ち", phrases: [
+    { en: "You really saved me!",     ja: "本当に助かりました！" },
+    { en: "I can't believe it!",      ja: "信じられない！" },
+    { en: "Take it easy",             ja: "大丈夫ですよ" },
+    { en: "That's spot on!",          ja: "完璧です！" },
+    { en: "I'm so jealous!",          ja: "うらやましい！" },
+    { en: "Give me a break!",         ja: "もうやめて！" },
+    { en: "I couldn't care less",     ja: "どうでもいいです" },
+    { en: "Cheer up!",                ja: "元気出して！" },
+    { en: "You've got this!",         ja: "頑張れ！" },
+    { en: "That means a lot to me",   ja: "それはとても嬉しいです" },
+    { en: "I'm blown away",           ja: "本当に驚きました" },
+    { en: "That's hilarious!",        ja: "めちゃ面白い！" },
+    { en: "I feel you",               ja: "気持ちわかるよ" },
+    { en: "I'm so proud of you",      ja: "本当に誇りに思う" },
+    { en: "I'm fed up",               ja: "うんざりです" },
+  ]},
+  travel: { title: "旅行", phrases: [
+    { en: "Where is it?",                      ja: "どこですか？" },
+    { en: "How much is it?",                   ja: "いくらですか？" },
+    { en: "What do you recommend?",            ja: "おすすめは何ですか？" },
+    { en: "Check, please",                     ja: "お会計をお願いします" },
+    { en: "I'm lost",                          ja: "道に迷いました" },
+    { en: "Can I try this on?",                ja: "試着できますか？" },
+    { en: "I'll take this one",                ja: "これをください" },
+    { en: "Can I take a photo?",               ja: "写真を撮ってもいいですか？" },
+    { en: "Do you have a menu?",               ja: "メニューはありますか？" },
+    { en: "One more, please",                  ja: "もう一つください" },
+    { en: "Is this seat taken?",               ja: "ここは空いていますか？" },
+    { en: "Can I have the Wi-Fi password?",    ja: "Wi-Fiのパスワードを教えてください" },
+    { en: "Where's the nearest station?",      ja: "一番近い駅はどこですか？" },
+    { en: "I'd like to book a room",           ja: "部屋を予約したいです" },
+    { en: "What time does it open?",           ja: "何時に開きますか？" },
+  ]},
+};
+
+// ─────────────────────────────────────────────
+// BeatMachine — Stay/trap vibe (170 BPM, F minor)
+// ─────────────────────────────────────────────
+class BeatMachine {
+  constructor() {
+    this.ctx       = null;
+    this.masterGain = null;
+    this.duckGain  = null;
+    this.reverbNode = null;
+    this.reverbSend = null;
+    this.bpm       = 170;
+    this.playing   = false;
+    this.step      = 0;
+    this.nextTime  = 0;
+    this.timerID   = null;
+  }
+
+  distCurve(amount) {
+    const n = 256, c = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      const x = (i * 2 / n) - 1;
+      c[i] = ((Math.PI + amount) * x) / (Math.PI + amount * Math.abs(x));
+    }
+    return c;
+  }
+
+  async init() {
+    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Signal chain: instruments → duckGain → masterGain → compressor → out
+    this.duckGain   = this.ctx.createGain();   this.duckGain.gain.value = 1;
+    this.masterGain = this.ctx.createGain();   this.masterGain.gain.value = 0.72;
+
+    const comp = this.ctx.createDynamicsCompressor();
+    comp.threshold.value = -18; comp.knee.value = 6;
+    comp.ratio.value = 4;       comp.attack.value = 0.003; comp.release.value = 0.25;
+
+    this.duckGain.connect(this.masterGain);
+    this.masterGain.connect(comp);
+    comp.connect(this.ctx.destination);
+
+    // Reverb (convolution with synthetic impulse)
+    this.reverbNode = this.ctx.createConvolver();
+    const sr = this.ctx.sampleRate, len = sr * 1.8;
+    const imp = this.ctx.createBuffer(2, len, sr);
+    for (let c = 0; c < 2; c++) {
+      const d = imp.getChannelData(c);
+      for (let i = 0; i < len; i++) d[i] = (Math.random()*2-1) * Math.pow(1 - i/len, 2);
+    }
+    this.reverbNode.buffer = imp;
+    this.reverbSend = this.ctx.createGain(); this.reverbSend.gain.value = 0.28;
+    this.reverbNode.connect(this.reverbSend);
+    this.reverbSend.connect(this.masterGain);
+  }
+
+  out()  { return this.duckGain; }
+  verb() { return this.reverbNode; }
+
+  duck(on) {
+    if (!this.duckGain) return;
+    const t = this.ctx.currentTime;
+    this.duckGain.gain.cancelScheduledValues(t);
+    this.duckGain.gain.setValueAtTime(this.duckGain.gain.value, t);
+    this.duckGain.gain.linearRampToValueAtTime(on ? 0.18 : 1.0, t + 0.35);
+  }
+
+  async start() {
+    if (!this.ctx) await this.init();
+    if (this.ctx.state === 'suspended') await this.ctx.resume();
+    this.playing  = true;
+    this.step     = 0;
+    this.nextTime = this.ctx.currentTime + 0.05;
+    this._schedule();
+  }
+
+  stop() {
+    this.playing = false;
+    if (this.timerID) clearTimeout(this.timerID);
+    if (this.masterGain) {
+      const t = this.ctx.currentTime;
+      this.masterGain.gain.setTargetAtTime(0, t, 0.08);
+      setTimeout(() => { if (this.masterGain) this.masterGain.gain.value = 0.72; }, 600);
+    }
+  }
+
+  _schedule() {
+    const stepDur = (60 / this.bpm) / 4; // 16th note duration (seconds)
+    while (this.nextTime < this.ctx.currentTime + 0.15) {
+      this._step(this.step % 32, this.nextTime, stepDur);
+      this.nextTime += stepDur;
+      this.step++;
+    }
+    if (this.playing) this.timerID = setTimeout(() => this._schedule(), 20);
+  }
+
+  _step(step, t, sd) {
+    const bar = Math.floor(step / 16); // 0 or 1
+    const s   = step % 16;             // 0–15
+
+    // ── KICK (trap pattern)
+    const kick0 = [1,0,0,0, 0,0,1,0, 1,0,0,0, 0,1,0,0];
+    const kick1 = [1,0,0,0, 0,0,0,0, 1,0,1,0, 0,0,1,0];
+    if ((bar===0 ? kick0 : kick1)[s]) this._kick(t);
+
+    // ── SNARE / CLAP (beats 2 & 4)
+    if (s===4 || s===12) this._snare(t);
+
+    // ── HI-HAT 16ths (accented on downbeats)
+    const hhv = [.6,.25,.5,.25, .7,.25,.55,.25, .6,.25,.5,.25, .75,.25,.9,.35];
+    this._hihat(t, hhv[s] * 0.48);
+
+    // ── OPEN HAT
+    if (s===7 || (bar===1 && s===15)) this._openhat(t);
+
+    // ── 808 BASS (quarter notes)
+    // F1=43.65  Ab1=51.91  Bb1=58.27  Db2=69.30  Eb2=77.78
+    const bass = [
+      [43.65, 43.65, 69.30, 77.78], // bar 0: F1 F1 Db2 Eb2
+      [43.65, 51.91, 58.27, 69.30], // bar 1: F1 Ab1 Bb1 Db2
+    ];
+    if (s % 4 === 0) this._808(t, bass[bar][s/4], sd * 3.85);
+
+    // ── PIANO MELODY (8th notes, inspired by Stay vibe)
+    // C5=523.25 Bb4=466.16 Ab4=415.30 G4=392 F4=349.23 Eb4=311.13
+    const R = 0;
+    const mel = [
+      [523.25,R, 466.16,R, 415.30,R, R,R,     392.00,R, 415.30,R, 523.25,R, R,R],
+      [466.16,R, 415.30,R, 392.00,R, 349.23,R, 392.00,R, 415.30,R, 523.25,R, R,R],
+    ];
+    if (s % 2 === 0) {
+      const freq = mel[bar][s];
+      if (freq) this._piano(t, freq, sd * 1.9);
+    }
+
+    // ── PAD CHORD (every bar start)
+    // Fm=F3,Ab3,C4 / DbM=Db3,F3,Ab3 / AbM=Ab2,C3,Eb3 / EbM=Eb3,G3,Bb3
+    const chords = [
+      [[174.61,207.65,261.63]],  // bar 0: Fm
+      [[138.59,174.61,207.65]],  // bar 1: DbM
+    ];
+    if (s === 0) chords[bar][0].forEach(f => this._pad(t, f, sd * 15));
+  }
+
+  _kick(t) {
+    const {ctx} = this;
+    const osc = ctx.createOscillator(), g = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(130, t);
+    osc.frequency.exponentialRampToValueAtTime(38, t + 0.13);
+    g.gain.setValueAtTime(1.6, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.38);
+    osc.connect(g); g.connect(this.out());
+    osc.start(t); osc.stop(t + 0.4);
+  }
+
+  _snare(t) {
+    const {ctx} = this;
+    // Noise layer
+    const nbuf = ctx.createBuffer(1, ctx.sampleRate*0.2, ctx.sampleRate);
+    const nd = nbuf.getChannelData(0);
+    for (let i=0;i<nbuf.length;i++) nd[i]=Math.random()*2-1;
+    const noise = ctx.createBufferSource(); noise.buffer = nbuf;
+    const bp = ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1800; bp.Q.value=0.6;
+    const ng = ctx.createGain();
+    ng.gain.setValueAtTime(0.85,t); ng.gain.exponentialRampToValueAtTime(0.001,t+0.2);
+    // Tone layer
+    const osc = ctx.createOscillator(), og = ctx.createGain();
+    osc.frequency.value = 185;
+    og.gain.setValueAtTime(0.55,t); og.gain.exponentialRampToValueAtTime(0.001,t+0.09);
+    noise.connect(bp); bp.connect(ng); ng.connect(this.out()); ng.connect(this.verb());
+    osc.connect(og); og.connect(this.out());
+    noise.start(t); noise.stop(t+0.22); osc.start(t); osc.stop(t+0.1);
+  }
+
+  _hihat(t, vol) {
+    const {ctx} = this;
+    const buf = ctx.createBuffer(1, Math.ceil(ctx.sampleRate*0.05), ctx.sampleRate);
+    const d = buf.getChannelData(0); for(let i=0;i<buf.length;i++) d[i]=Math.random()*2-1;
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const hp = ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=9500;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.04);
+    src.connect(hp); hp.connect(g); g.connect(this.out());
+    src.start(t); src.stop(t+0.05);
+  }
+
+  _openhat(t) {
+    const {ctx} = this;
+    const buf = ctx.createBuffer(1, Math.ceil(ctx.sampleRate*0.22), ctx.sampleRate);
+    const d = buf.getChannelData(0); for(let i=0;i<buf.length;i++) d[i]=Math.random()*2-1;
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const hp = ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=8200;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.3,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.22);
+    src.connect(hp); hp.connect(g); g.connect(this.out());
+    src.start(t); src.stop(t+0.25);
+  }
+
+  _808(t, freq, dur) {
+    const {ctx} = this;
+    const osc = ctx.createOscillator();
+    const dist = ctx.createWaveShaper(); dist.curve=this.distCurve(25); dist.oversample='2x';
+    const g = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq*1.6,t);
+    osc.frequency.exponentialRampToValueAtTime(freq, t+0.07);
+    g.gain.setValueAtTime(1.3,t);
+    g.gain.setValueAtTime(1.3,t+dur*0.78);
+    g.gain.exponentialRampToValueAtTime(0.001,t+dur+0.12);
+    osc.connect(dist); dist.connect(g); g.connect(this.out());
+    osc.start(t); osc.stop(t+dur+0.2);
+  }
+
+  _piano(t, freq, dur) {
+    const {ctx} = this;
+    const osc = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const g = ctx.createGain(), g2 = ctx.createGain();
+    osc.type='triangle'; osc.frequency.value=freq;
+    osc2.type='sine';    osc2.frequency.value=freq*2; g2.gain.value=0.12;
+    g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(0.38,t+0.006);
+    g.gain.exponentialRampToValueAtTime(0.1,t+0.15);
+    g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+    osc.connect(g); osc2.connect(g2); g2.connect(g);
+    g.connect(this.out()); g.connect(this.verb());
+    osc.start(t); osc2.start(t); osc.stop(t+dur+0.1); osc2.stop(t+dur+0.1);
+  }
+
+  _pad(t, freq, dur) {
+    const {ctx} = this;
+    const osc = ctx.createOscillator();
+    const lp = ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=800;
+    const g = ctx.createGain();
+    osc.type='sawtooth'; osc.frequency.value=freq;
+    g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(0.06,t+0.4);
+    g.gain.setValueAtTime(0.06,t+dur-0.6);
+    g.gain.linearRampToValueAtTime(0,t+dur);
+    osc.connect(lp); lp.connect(g); g.connect(this.verb());
+    osc.start(t); osc.stop(t+dur+0.1);
+  }
+}
+
+// ─────────────────────────────────────────────
+// App state
+// ─────────────────────────────────────────────
+let cat     = 'daily';
+let idx     = 0;
+let playing = false;
+let repeat  = false;
+let rate    = 0.85;
+let speaking = false;
+let beatTick = null, beatPos = 0, autoTimer = null;
+let musicOn = false;
+let voices  = [];
+
+const beat = new BeatMachine();
+
+function loadVoices() {
+  voices = speechSynthesis.getVoices();
+  if (!voices.length) speechSynthesis.addEventListener('voiceschanged', () => { voices = speechSynthesis.getVoices(); }, {once:true});
+}
+loadVoices();
+
+function bestVoice(lang) {
+  const prefs = lang==='en-US'
+    ? ['Samantha','Google US English','en-US','en_US','en']
+    : ['Kyoko','Google 日本語','ja-JP','ja_JP','ja'];
+  for (const p of prefs) {
+    const v = voices.find(v => v.name.includes(p) || v.lang.startsWith(p));
+    if (v) return v;
+  }
+  return voices.find(v => v.lang.startsWith(lang.split('-')[0])) || null;
+}
+
+function tts(text, lang) {
+  return new Promise(res => {
+    if (!('speechSynthesis' in window)) return res();
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang=lang; u.rate=rate; u.pitch=1.05; u.volume=1;
+    const v = bestVoice(lang); if (v) u.voice=v;
+    u.onend=res; u.onerror=res;
+    speechSynthesis.speak(u);
+  });
+}
+
+// ─────────────────────────────────────────────
+// DOM refs
+// ─────────────────────────────────────────────
+const catsEl   = document.getElementById('cats');
+const winEl    = document.getElementById('phraseWindow');
+const speakEl  = document.getElementById('speakBars');
+const modeLbl  = document.getElementById('modeLbl');
+const beatRow  = document.getElementById('beatRow');
+const bDots    = beatRow.querySelectorAll('.bd');
+const counter  = document.getElementById('counter');
+const pfill    = document.getElementById('progressFill');
+const catLabel = document.getElementById('catLabel');
+const playBtn  = document.getElementById('playBtn');
+const musicBtn = document.getElementById('musicBtn');
+const hint     = document.getElementById('musicHint');
+
+// ─────────────────────────────────────────────
+// Render
+// ─────────────────────────────────────────────
+function renderCats() {
+  catsEl.innerHTML = '';
+  Object.entries(DATA).forEach(([key, d]) => {
+    const b = document.createElement('button');
+    b.className = 'cat' + (key===cat ? ' active' : '');
+    b.textContent = d.title;
+    b.onclick = () => { stopAll(); cat=key; idx=0; renderCats(); renderWindow(); };
+    catsEl.appendChild(b);
+  });
+}
+
+function renderWindow() {
+  const phrases = DATA[cat].phrases;
+  winEl.innerHTML = '';
+  for (let offset=-2; offset<=2; offset++) {
+    const i = (idx+offset+phrases.length) % phrases.length;
+    const p = phrases[i];
+    const div = document.createElement('div');
+    div.className='ph-item'; div.dataset.pos=offset;
+    div.innerHTML=`<div class="ph-en">${p.en}</div><div class="ph-ja">${p.ja}</div>`;
+    div.onclick = () => {
+      const ni = (idx+offset+phrases.length) % phrases.length;
+      idx=ni; renderWindow(); updateInfo();
+      if (!playing) speakPhrase();
+    };
+    winEl.appendChild(div);
+  }
+  updateInfo();
+}
+
+function updateInfo() {
+  const n = DATA[cat].phrases.length;
+  counter.textContent = `${idx+1} / ${n}`;
+  pfill.style.width   = `${((idx+1)/n)*100}%`;
+  catLabel.textContent = DATA[cat].title;
+}
+
+// ─────────────────────────────────────────────
+// TTS + play loop
+// ─────────────────────────────────────────────
+async function speakPhrase() {
+  const p = DATA[cat].phrases[idx];
+  speaking = true;
+  speakEl.classList.remove('off');
+  beat.duck(true);
+
+  modeLbl.textContent = '英語を聞こう 👂';
+  await tts(p.en, 'en-US');
+  if (!speaking) return;
+
+  await new Promise(r => setTimeout(r, 320));
+  if (!speaking) return;
+
+  modeLbl.textContent = '日本語で確認 ✓';
+  await tts(p.ja, 'ja-JP');
+
+  beat.duck(false);
+  speakEl.classList.add('off');
+  modeLbl.textContent = '';
+  speaking = false;
+
+  if (playing) {
+    autoTimer = setTimeout(() => {
+      if (!playing) return;
+      if (repeat) { speakPhrase(); return; }
+      const phrases = DATA[cat].phrases;
+      idx = (idx+1) % phrases.length;
+      renderWindow();
+      speakPhrase();
+    }, 800);
+  }
+}
+
+function stopAll() {
+  playing=false; speaking=false;
+  clearTimeout(autoTimer);
+  speechSynthesis.cancel();
+  speakEl.classList.add('off');
+  modeLbl.textContent='';
+  stopVisualBeat();
+  playBtn.textContent='▶';
+  playBtn.classList.remove('playing');
+  beat.duck(false);
+}
+
+// ─────────────────────────────────────────────
+// Visual beat (synced to music tempo)
+// ─────────────────────────────────────────────
+function startVisualBeat() {
+  stopVisualBeat();
+  beatPos=0;
+  // 16th note at 170 BPM = 60/170/4 s ≈ 88 ms
+  const ms = (60000/170/4);
+  beatTick = setInterval(() => {
+    bDots.forEach(d=>d.classList.remove('lit'));
+    bDots[beatPos % bDots.length].classList.add('lit');
+    beatPos++;
+  }, ms);
+}
+function stopVisualBeat() {
+  clearInterval(beatTick);
+  bDots.forEach(d=>d.classList.remove('lit'));
+}
+
+// ─────────────────────────────────────────────
+// Controls
+// ─────────────────────────────────────────────
+playBtn.addEventListener('click', () => {
+  if (playing) {
+    stopAll();
+  } else {
+    playing=true;
+    playBtn.textContent='⏸'; playBtn.classList.add('playing');
+    startVisualBeat();
+    if (!speaking) speakPhrase();
+  }
+});
+
+document.getElementById('prevBtn').addEventListener('click', () => {
+  speechSynthesis.cancel(); speaking=false; clearTimeout(autoTimer);
+  const n=DATA[cat].phrases.length;
+  idx=(idx-1+n)%n; renderWindow();
+  if (playing) speakPhrase();
+});
+
+document.getElementById('nextBtn').addEventListener('click', () => {
+  speechSynthesis.cancel(); speaking=false; clearTimeout(autoTimer);
+  idx=(idx+1)%DATA[cat].phrases.length; renderWindow();
+  if (playing) speakPhrase();
+});
+
+document.getElementById('repeatBtn').addEventListener('click', function() {
+  repeat=!repeat; this.classList.toggle('icon-active',repeat);
+});
+
+// Music toggle
+musicBtn.addEventListener('click', async () => {
+  musicOn = !musicOn;
+  if (musicOn) {
+    await beat.start();
+    startVisualBeat();
+    musicBtn.textContent='🔇';
+    musicBtn.classList.remove('music-off');
+    hint.textContent='🎵 Stay / トラップビート再生中';
+  } else {
+    beat.stop();
+    if (!playing) stopVisualBeat();
+    musicBtn.textContent='🎵';
+    musicBtn.classList.add('music-off');
+    hint.textContent='🎵 タップして音楽スタート';
+  }
+});
+
+// Speed
+document.querySelectorAll('.spd').forEach(b => {
+  b.addEventListener('click', function() {
+    document.querySelectorAll('.spd').forEach(x=>x.classList.remove('active'));
+    this.classList.add('active');
+    rate = parseFloat(this.dataset.rate);
+  });
+});
+
+// ─────────────────────────────────────────────
+// Particles
+// ─────────────────────────────────────────────
+function spawnParticles() {
+  const el=document.getElementById('particles');
+  const colors=['#ff2d9f','#00e5ff','#7c3aed','#fff','#f59e0b'];
+  for (let i=0;i<22;i++) {
+    const p=document.createElement('div'); p.className='particle';
+    p.style.cssText=`
+      left:${Math.random()*100}vw;
+      animation-duration:${6+Math.random()*12}s;
+      animation-delay:${Math.random()*12}s;
+      background:${colors[i%colors.length]};
+      opacity:${0.2+Math.random()*0.35};
+      width:${1+Math.random()*2}px;height:${1+Math.random()*2}px;`;
+    el.appendChild(p);
+  }
+}
+
+document.addEventListener('visibilitychange', () => { if(document.hidden) stopAll(); });
+
+renderCats();
+renderWindow();
+spawnParticles();
+</script>
+</body>
+</html>
+
