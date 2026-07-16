@@ -31,6 +31,10 @@ BUTTON_PINS = {
     "side_space": board.GP13,
     "side_ctrl": board.GP14,
     "dash": board.GP15,  # 独立ダッシュボタン
+    # --- 市販品レビュー分析(design-notes #1, #4)対応 ---
+    "top_esc": board.GP16,  # ESC物理ボタン。市販品最大の不満点
+    "spare_1": board.GP17,  # 増設用。位置・キーは試作しながら決める
+    "spare_2": board.GP18,  # 増設用
 }
 
 # --- プロファイル切替 ---------------------------------------------
@@ -73,6 +77,9 @@ PROFILES = [
             "side_space": Keycode.SPACE,
             "side_ctrl": Keycode.LEFT_CONTROL,
             "dash": Keycode.LEFT_SHIFT,
+            "top_esc": Keycode.ESCAPE,
+            # spare_1 / spare_2 は未割当(押しても何も起きない)。
+            # 使うことになったらここに追記する。
         },
         "stick": {
             "deadzone": 0.30,
@@ -109,6 +116,7 @@ PROFILES = [
             "side_space": Keycode.SPACE,
             "side_ctrl": Keycode.LEFT_CONTROL,
             "dash": Keycode.LEFT_SHIFT,
+            "top_esc": Keycode.ESCAPE,
         },
         "stick": {
             "deadzone": 0.30,
