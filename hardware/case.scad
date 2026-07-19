@@ -10,17 +10,21 @@
 $fn = 48;            // 曲面分割数(印刷時は 96 以上推奨)
 wall = 2.4;          // 壁厚
 
-// ---- ベース(手首を乗せる土台) ----
-base_len   = 110;    // 前後長
-base_width = 78;     // 左右幅
-base_height = 14;    // 土台の厚み
+// ---- ベース(手首を乗せる傾斜土台) ----
+// 平板ではなく、手首側が低くグリップ付け根側が高いスロープ。
+// 掌の腹をこの斜面で受けて、机の縁での「手が浮く」問題(レビュー#6)も緩和する
+base_len          = 115;  // 前後長
+base_width        = 80;   // 左右幅
+base_height_rear  = 8;    // 手首側の高さ(低い)
+base_height_front = 20;   // グリップ付け根側の高さ(高い)
 
 // ---- グリップ(握り柱) ----
 grip_angle  = 28;    // 前傾角度(度)。ここが握り心地の最重要パラメータ
 grip_height = 78;    // 柱の高さ
 grip_width  = 46;    // 柱の左右幅
 grip_depth  = 58;    // 柱の前後厚
-grip_offset_y = -8;  // ベース上での前後位置
+grip_offset_y = 8;   // ベース上での前後位置(+で高い側=前寄り)
+grip_root_h   = 24;  // 付け根ブレンド部の高さ(掌の腹の横が当たる裾広がり)
 
 // ---- 天面ボタンプレート ----
 plate_tilt   = 32;   // 天面の傾き(度)。親指が自然に届く角度に合わせる
@@ -64,28 +68,45 @@ module rounded_slab(l, w, h, r) {
                 cylinder(h = h, r = r);
 }
 
-// 手首側の土台
+// 手首側の傾斜土台(後端の低い断面と前端の高い断面を hull で繋いだスロープ)
 module base() {
-    rounded_slab(base_len, base_width, base_height, 18);
+    hull() {
+        translate([-base_len / 2 + 27, 0, 0])
+            rounded_slab(54, base_width, base_height_rear, 16);
+        translate([base_len / 2 - 27, 0, 0])
+            rounded_slab(54, base_width, base_height_front, 16);
+    }
 }
 
-// 前傾した握り柱(下端と上端の断面を hull で繋ぐ)。
-// 上端断面は plate_tilt で傾けてあり、hull の天面がそのままボタンプレートになる
+// 前傾した握り柱。2段構成:
+//  1) 付け根ブレンド: 裾広がりのスカートで土台に滑らかに接続し、
+//     掌の腹の横が当たる面を作る
+//  2) 握り柱本体: 上端断面は plate_tilt で傾けてあり、
+//     hull の天面がそのままボタンプレートになる
 module grip() {
     top_shift = grip_height * tan(grip_angle);
-    hull() {
-        translate([grip_offset_y, 0, base_height - 1])
-            rounded_slab(grip_depth, grip_width, 2, 14);
-        translate([grip_offset_y + top_shift, 0, base_height + grip_height])
-            rotate([0, plate_tilt, 0])
-                rounded_slab(grip_depth * 0.8, grip_width * 0.9, 2, 12);
+    mid_shift = grip_root_h * tan(grip_angle);
+    union() {
+        hull() {
+            translate([grip_offset_y - 4, 0, base_height_front - 12])
+                rounded_slab(grip_depth + 20, grip_width + 16, 2, 18);
+            translate([grip_offset_y + mid_shift, 0, base_height_front + grip_root_h])
+                rounded_slab(grip_depth, grip_width, 2, 14);
+        }
+        hull() {
+            translate([grip_offset_y + mid_shift, 0, base_height_front + grip_root_h])
+                rounded_slab(grip_depth, grip_width, 2, 14);
+            translate([grip_offset_y + top_shift, 0, base_height_front + grip_height])
+                rotate([0, plate_tilt, 0])
+                    rounded_slab(grip_depth * 0.8, grip_width * 0.9, 2, 12);
+        }
     }
 }
 
 // 天面プレートの座標系へ移動(grip() の上端断面と同じ変換)
 module on_plate() {
     top_shift = grip_height * tan(grip_angle);
-    translate([grip_offset_y + top_shift, 0, base_height + grip_height])
+    translate([grip_offset_y + top_shift, 0, base_height_front + grip_height])
         rotate([0, plate_tilt, 0])
             children();
 }
@@ -104,9 +125,9 @@ module top_cutouts() {
 // 側面ボタンの角穴(小指側の面)
 module side_cutouts() {
     for (i = [0 : 2])
-        translate([grip_offset_y + 10,
+        translate([grip_offset_y + 12,
                    grip_width / 2 - wall - 2,
-                   base_height + 24 + i * side_btn_pitch])
+                   base_height_front + grip_root_h + 8 + i * side_btn_pitch])
             cube([side_btn_w, wall + 6, side_btn_h]);
 }
 
