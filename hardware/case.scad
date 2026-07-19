@@ -69,18 +69,20 @@ module base() {
     rounded_slab(base_len, base_width, base_height, 18);
 }
 
-// 前傾した握り柱(下端と上端の断面を hull で繋ぐ)
+// 前傾した握り柱(下端と上端の断面を hull で繋ぐ)。
+// 上端断面は plate_tilt で傾けてあり、hull の天面がそのままボタンプレートになる
 module grip() {
     top_shift = grip_height * tan(grip_angle);
     hull() {
         translate([grip_offset_y, 0, base_height - 1])
             rounded_slab(grip_depth, grip_width, 2, 14);
         translate([grip_offset_y + top_shift, 0, base_height + grip_height])
-            rounded_slab(grip_depth * 0.8, grip_width * 0.9, 2, 12);
+            rotate([0, plate_tilt, 0])
+                rounded_slab(grip_depth * 0.8, grip_width * 0.9, 2, 12);
     }
 }
 
-// 天面プレートの座標系へ移動(グリップ上端に傾けて載せる)
+// 天面プレートの座標系へ移動(grip() の上端断面と同じ変換)
 module on_plate() {
     top_shift = grip_height * tan(grip_angle);
     translate([grip_offset_y + top_shift, 0, base_height + grip_height])
@@ -109,17 +111,10 @@ module side_cutouts() {
 }
 
 // ---- 本体 ----
+// 現段階はソリッド(軽量化はスライサーのインフィル設定に任せる)。
+// 基板・配線用の内部空間と底蓋は、グリップ形状確定後の v1 で設計する
 difference() {
     union() {
-        base();
-        grip();
-    }
-    // 内部を肉抜き(基板・配線スペース)
-    translate([0, 0, wall]) scale([
-        (base_len - 2 * wall) / base_len,
-        (base_width - 2 * wall) / base_width,
-        1
-    ]) {
         base();
         grip();
     }
