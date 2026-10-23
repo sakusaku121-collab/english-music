@@ -22,6 +22,8 @@ difference() {
         on_head(p[0], p[1]) translate([0, 0, -20]) cylinder(d = btn_hole, h = 30);
     for (z = side_button_z)
         on_front(z) cube([side_btn_h, side_btn_w, 10], center = true);
+    for (b = base_buttons)
+        on_base(b) translate([0, 0, -2.5]) cube([13, 13, 6], center = true);
 }
 
 // TODO(外形確定後):

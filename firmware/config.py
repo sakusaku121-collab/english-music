@@ -33,8 +33,10 @@ BUTTON_PINS = {
     "dash": board.GP15,  # 独立ダッシュボタン
     # --- 市販品レビュー分析(design-notes #1, #4)対応 ---
     "top_esc": board.GP16,  # ESC物理ボタン。市販品最大の不満点
-    "spare_1": board.GP17,  # 増設用。位置・キーは試作しながら決める
-    "spare_2": board.GP18,  # 増設用
+    # 土台の床ボタン(撃ち合い中に押さないもの。手をずらして押す)
+    "base_rev": board.GP17,   # デスボ・蘇生
+    "base_f1": board.GP18,    # F1(Fnキー不要で直接送れる)
+    "base_view": board.GP19,  # 武器を眺める
 }
 
 # --- プロファイル切替 ---------------------------------------------
@@ -78,8 +80,9 @@ PROFILES = [
             "side_ctrl": Keycode.LEFT_CONTROL,
             "dash": Keycode.LEFT_SHIFT,
             "top_esc": Keycode.ESCAPE,
-            # spare_1 / spare_2 は未割当(押しても何も起きない)。
-            # 使うことになったらここに追記する。
+            "base_f1": Keycode.F1,
+            "base_view": Keycode.N,  # Apex 初期設定の「武器を調べる」
+            # base_rev はゲーム側のキー設定を確認してから割り当てる(未割当の間は押しても何も起きない)
         },
         "stick": {
             "deadzone": 0.30,
@@ -117,6 +120,8 @@ PROFILES = [
             "side_ctrl": Keycode.LEFT_CONTROL,
             "dash": Keycode.LEFT_SHIFT,
             "top_esc": Keycode.ESCAPE,
+            "base_f1": Keycode.F1,
+            "base_view": Keycode.N,
         },
         "stick": {
             "deadzone": 0.30,
