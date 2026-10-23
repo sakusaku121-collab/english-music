@@ -18,10 +18,15 @@ firmware/   Raspberry Pi Pico 用ファームウェア (CircuitPython)
   code.py     メインループ
   config.py   キーマップ・スティック挙動・プロファイル定義(編集するのは基本ここだけ)
 hardware/   筐体・部品
-  case.scad   パラメトリック筐体モデル (OpenSCAD)
-  BOM.md      部品表
+  body.scad     滑らかな外形の定義(寸法パラメータはここ)
+  concept.scad  色付きの完成イメージ(レンダー用)
+  case.scad     印刷用モデル(body.scad の外形+穴)
+  stl/          印刷用 STL
+  BOM.md        部品表
 docs/
   design-notes.md   設計判断の記録(なぜこの仕様なのか)
+  photo-guide.md    手の寸法を取るための撮影・計測ガイド
+  next-actions.md   次にやること
 ```
 
 ## 必要なもの

@@ -1,158 +1,31 @@
 // =============================================================
-// left-hand-controller パラメトリック筐体 v0 (OpenSCAD)
+// 印刷用の握り心地確認モデル(外形は body.scad、完成イメージは concept.scad)
 //
-// これはエルゴノミクス試作用の「たたき台」。
-// 上部のパラメータを変えて印刷 → 握る → 調整、を繰り返す前提。
-// 印刷時は $fn を上げる(プレビューは低くて可)。
+// 中身は詰まったソリッド。軽量化はスライサーのインフィル設定に任せる。
+// 基板・配線用の空洞と底蓋は、外形が確定してから設計する。
+// 穴は「親指がそこに届くか」を確かめるための目印。
 // =============================================================
+include <body.scad>
 
-// ---- 全体 ----
-$fn = 48;            // 曲面分割数(印刷時は 96 以上推奨)
-wall = 2.4;          // 壁厚
+$fn = 64;
 
-// ---- ベース(手首を乗せる傾斜土台) ----
-// 平板ではなく、手首側が低くグリップ付け根側が高いスロープ。
-// 掌の腹をこの斜面で受けて、机の縁での「手が浮く」問題(レビュー#6)も緩和する
-base_len          = 115;  // 前後長
-base_width        = 80;   // 左右幅
-base_height_rear  = 8;    // 手首側の高さ(低い)
-base_height_front = 20;   // グリップ付け根側の高さ(高い)
+btn_hole     = 6.2;   // タクトスイッチキャップ径+クリアランス
+stick_hole_d = 30;    // スティック可動部の開口径
+side_btn_w   = 13;
+side_btn_h   = 7;
 
-// ---- グリップ(握り柱) ----
-grip_angle  = 28;    // 前傾角度(度)。ここが握り心地の最重要パラメータ
-grip_height = 78;    // 柱の高さ
-grip_width  = 46;    // 柱の左右幅
-grip_depth  = 58;    // 柱の前後厚
-grip_offset_y = 8;   // ベース上での前後位置(+で高い側=前寄り)
-grip_root_h   = 24;  // 付け根ブレンド部の高さ(掌の腹の横が当たる裾広がり)
-
-// ---- 天面ボタンプレート ----
-plate_tilt   = 32;   // 天面の傾き(度)。親指が自然に届く角度に合わせる
-plate_width  = 52;
-plate_length = 72;
-
-// ---- スティック ----
-stick_hole_d   = 30;  // スティック可動部の開口径
-stick_mount_w  = 34;  // モジュール基板の取付間隔(実測して合わせる)
-
-// ---- ボタン穴 ----
-btn_hole = 6.2;       // タクトスイッチキャップ径+クリアランス
-                      // Kailh choc なら 13.8x13.8 の角穴に変更する
-
-// ---- 側面ボタン(G / Space / Ctrl) ----
-side_btn_w = 12;
-side_btn_h = 6;
-side_btn_pitch = 16;
-
-// =============================================================
-
-// 天面のボタン配置(プレートローカル座標 [x, y])
-// 実機写真を参考にした扇状配置。自分の親指の可動域に合わせて調整する
-button_layout = [
-    [-16,  26],  // 3
-    [ -4,  30],  // 4
-    [  8,  26],  // Tab
-    [-20,  12],  // F
-    [-22,  -2],  // Q
-    [-18, -16],  // E
-    [  2, -20],  // X
-    [-12, -28],  // 1
-    [  0, -32],  // 2
-];
-stick_pos = [4, 4];  // スティック中心(プレートローカル)
-
-module rounded_slab(l, w, h, r) {
-    hull()
-        for (dx = [-1, 1], dy = [-1, 1])
-            translate([dx * (l/2 - r), dy * (w/2 - r), 0])
-                cylinder(h = h, r = r);
-}
-
-// 手首側の傾斜土台(後端の低い断面と前端の高い断面を hull で繋いだスロープ)
-module base() {
-    hull() {
-        translate([-base_len / 2 + 27, 0, 0])
-            rounded_slab(54, base_width, base_height_rear, 16);
-        translate([base_len / 2 - 27, 0, 0])
-            rounded_slab(54, base_width, base_height_front, 16);
-    }
-}
-
-// 前傾した握り柱。2段構成:
-//  1) 付け根ブレンド: 裾広がりのスカートで土台に滑らかに接続し、
-//     掌の腹の横が当たる面を作る
-//  2) 握り柱本体: 上端断面は plate_tilt で傾けてあり、
-//     hull の天面がそのままボタンプレートになる
-module grip() {
-    top_shift = grip_height * tan(grip_angle);
-    mid_shift = grip_root_h * tan(grip_angle);
-    union() {
-        hull() {
-            translate([grip_offset_y - 4, 0, base_height_front - 12])
-                rounded_slab(grip_depth + 20, grip_width + 16, 2, 18);
-            translate([grip_offset_y + mid_shift, 0, base_height_front + grip_root_h])
-                rounded_slab(grip_depth, grip_width, 2, 14);
-        }
-        hull() {
-            translate([grip_offset_y + mid_shift, 0, base_height_front + grip_root_h])
-                rounded_slab(grip_depth, grip_width, 2, 14);
-            translate([grip_offset_y + top_shift, 0, base_height_front + grip_height])
-                rotate([0, plate_tilt, 0])
-                    rounded_slab(grip_depth * 0.8, grip_width * 0.9, 2, 12);
-        }
-    }
-}
-
-// 天面プレートの座標系へ移動(grip() の上端断面と同じ変換)
-module on_plate() {
-    top_shift = grip_height * tan(grip_angle);
-    translate([grip_offset_y + top_shift, 0, base_height_front + grip_height])
-        rotate([0, plate_tilt, 0])
-            children();
-}
-
-// スティック開口+ボタン穴
-module top_cutouts() {
-    on_plate() {
-        translate([stick_pos[0], stick_pos[1], -20])
-            cylinder(h = 40, d = stick_hole_d);
-        for (p = button_layout)
-            translate([p[0], p[1], -20])
-                cylinder(h = 40, d = btn_hole);
-    }
-}
-
-// 側面ボタンの角穴(小指側の面)
-module side_cutouts() {
-    for (i = [0 : 2])
-        translate([grip_offset_y + 12,
-                   grip_width / 2 - wall - 2,
-                   base_height_front + grip_root_h + 8 + i * side_btn_pitch])
-            cube([side_btn_w, wall + 6, side_btn_h]);
-}
-
-// ---- 本体 ----
-// 現段階はソリッド(軽量化はスライサーのインフィル設定に任せる)。
-// 基板・配線用の内部空間と底蓋は、グリップ形状確定後の v1 で設計する
 difference() {
-    union() {
-        base();
-        grip();
-    }
-    top_cutouts();
-    side_cutouts();
+    body();
+    on_head(stick_pos[0], stick_pos[1])
+        translate([0, 0, -30]) cylinder(d = stick_hole_d, h = 40);
+    for (p = concat(button_layout, [esc_pos]))
+        on_head(p[0], p[1]) translate([0, 0, -20]) cylinder(d = btn_hole, h = 30);
+    for (z = side_button_z)
+        on_front(z) cube([side_btn_h, side_btn_w, 10], center = true);
 }
 
-// TODO(v1 以降):
-// - 底蓋 + M3インサートボス
-// - スティックモジュールの取付ボス(stick_mount_w で位置決め)
-// - Kailh choc 用の角穴プレートへの差し替え
-// - パネルマウントUSB-C口の開口(レビュー分析#9: 直付け面一コネクタは破損する)
-//
-// レビュー分析(docs/design-notes.md)からの形状要件:
-// - グリップ太さを上下で変える: 親指側(側面ボタン付近)は細く、
-//   薬指・小指側(下部)は太く → 握り込む力を減らして手首痛対策 (#5)
-// - パームレスト部(base)を広めに取り、掌の小指側エッジに角を当てない (#6)
-// - ボタンは親指可動域の実測範囲内のみに配置。届かない位置に置かない (#7)
-// - ESC + 予備2ボタンの配置スペースを天面外周に確保 (#1, #4)
-// - スティック開口部エッジは面取りし、モジュールはネジ止めで交換可能に (#10)
+// TODO(外形確定後):
+// - 内部空洞 + 底蓋 + M3インサートボス
+// - スティックモジュールの取付ボス、Kailh choc 用の角穴
+// - パネルマウントUSB-C口(レビュー分析#9: 直付け面一コネクタは破損する)
+// - ESC + 予備2ボタンの最終位置(レビュー分析#1, #4)
