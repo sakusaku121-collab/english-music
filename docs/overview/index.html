@@ -1,0 +1,434 @@
+<title>left-hand-controller</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+1:wght@500;800&family=Zen+Kaku+Gothic+New:wght@400;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: 1カラムの作業ノート。上に積層ラインの帯、タブで7画面を切り替え */
+:root{
+  --bg:#EEF0F2; --surface:#FFFFFF; --ink:#1F2329; --muted:#5E6670; --line:#D5D9DE;
+  --accent:#E2601A; --accent-soft:#FCE9DD;
+  --done:#2F8A57; --done-soft:#E1F2E8; --now:#B86A00; --now-soft:#FBEFD9; --later:#7A828C; --later-soft:#E7EAED;
+  --display:"M PLUS 1","Zen Kaku Gothic New","Hiragino Sans",sans-serif;
+  --body:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#15181C; --surface:#1E2228; --ink:#E8EBEE; --muted:#9AA3AD; --line:#323840;
+  --accent:#FF8A45; --accent-soft:#3A2618;
+  --done:#5CC28A; --done-soft:#17301F; --now:#F0A63A; --now-soft:#33270F; --later:#9AA3AD; --later-soft:#262B31;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#15181C; --surface:#1E2228; --ink:#E8EBEE; --muted:#9AA3AD; --line:#323840;
+  --accent:#FF8A45; --accent-soft:#3A2618;
+  --done:#5CC28A; --done-soft:#17301F; --now:#F0A63A; --now-soft:#33270F; --later:#9AA3AD; --later-soft:#262B31;
+  color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.75}
+.wrap{max-width:860px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 64px}
+header.top{padding-block:28px 20px;border-bottom:1px solid var(--line);
+  background-image:repeating-linear-gradient(to bottom,transparent 0 5px,var(--line) 5px 6px);
+  background-size:100% 100%;-webkit-mask-image:none}
+header.top .inner{background:var(--bg);display:inline-block;padding:6px 12px 8px 0}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;color:var(--muted)}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(26px,5vw,36px);line-height:1.2;margin:4px 0 6px;text-wrap:balance}
+.lede{margin:0;color:var(--muted);max-width:60ch}
+nav.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:20px 0 24px}
+nav.tabs button{font:inherit;font-size:14px;font-weight:700;color:var(--muted);background:transparent;border:1px solid var(--line);border-radius:999px;padding:6px 14px;cursor:pointer}
+nav.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+nav.tabs button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h2{font-family:var(--display);font-weight:800;font-size:22px;margin:32px 0 10px;text-wrap:balance}
+h2:first-child{margin-top:0}
+h3{font-family:var(--display);font-weight:800;font-size:17px;margin:0 0 6px}
+p{margin:0 0 10px;max-width:65ch}
+a{color:var(--accent)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px}
+.next{border:2px solid var(--accent);background:var(--accent-soft)}
+.next .label{font-family:var(--mono);font-size:12px;letter-spacing:.08em;color:var(--accent);font-weight:500}
+.stack{display:grid;gap:12px}
+.chip{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:1px 10px;white-space:nowrap}
+.chip.done{background:var(--done-soft);color:var(--done)}
+.chip.now{background:var(--now-soft);color:var(--now)}
+.chip.later{background:var(--later-soft);color:var(--later)}
+.track{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin:14px 0 6px}
+.track span{height:8px;border-radius:2px;background:var(--later-soft)}
+.track span.done{background:var(--done)} .track span.now{background:var(--now)}
+.track-labels{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;font-size:11px;color:var(--muted);line-height:1.3}
+.phase{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;padding:16px 0;border-top:1px solid var(--line)}
+.phase:first-of-type{border-top:0}
+.phase .no{font-family:var(--mono);font-size:13px;color:var(--muted);padding-top:3px}
+.phase .head{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.phase ol,.phase ul{margin:6px 0 0;padding-left:1.3em}
+.phase li{margin:2px 0}
+.who{font-size:12px;color:var(--muted)}
+.tablebox{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+th{font-size:12px;color:var(--muted);font-weight:700;background:var(--bg);white-space:nowrap}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.mono{font-family:var(--mono);font-size:13px}
+.key{display:inline-block;font-family:var(--mono);font-size:12px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 6px;background:var(--surface);white-space:nowrap}
+.key.dark{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.shots{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+figure{margin:0}
+figure img{display:block;width:100%;border-radius:10px;background:#1D1F21}
+figcaption{font-size:13px;color:var(--muted);margin-top:6px}
+.specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:12px}
+.spec{border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:var(--surface)}
+.spec b{display:block;font-family:var(--display);font-size:18px}
+.spec span{font-size:12px;color:var(--muted)}
+.warn{border-left:4px solid var(--accent);padding:8px 14px;background:var(--surface);border-radius:0 8px 8px 0}
+dl.gloss{display:grid;grid-template-columns:minmax(0,9em) minmax(0,1fr);gap:0;margin:0}
+dl.gloss dt,dl.gloss dd{padding:10px 0;border-bottom:1px solid var(--line);margin:0}
+dl.gloss dt{font-weight:700;padding-right:12px}
+@media (max-width:520px){dl.gloss{grid-template-columns:1fr} dl.gloss dt{border-bottom:0;padding-bottom:0} .track-labels{font-size:10px}}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+section[role="tabpanel"]{min-width:0}
+.foot{margin-top:40px;font-size:12px;color:var(--muted)}
+</style>
+
+<div class="wrap">
+<header class="top"><div class="inner">
+  <div class="eyebrow">LEFT-HAND CONTROLLER · Bambu Lab A1 mini · Raspberry Pi Pico</div>
+  <h1>left-hand-controller</h1>
+  <p class="lede">マウスと一緒に使う、左手用のゲーム入力デバイスを自作する計画。Apexでバッテリーを巻きながら左右に避けても、ダッシュで回復がキャンセルされない操作を目指す。</p>
+</div></header>
+
+<nav class="tabs" role="tablist" aria-label="ページ">
+  <button role="tab" id="t-overview" data-tab="overview">概要</button>
+  <button role="tab" id="t-steps" data-tab="steps">手順</button>
+  <button role="tab" id="t-design" data-tab="design">完成イメージ</button>
+  <button role="tab" id="t-shop" data-tab="shop">買い物リスト</button>
+  <button role="tab" id="t-filament" data-tab="filament">フィラメント</button>
+  <button role="tab" id="t-why" data-tab="why">設計の理由</button>
+  <button role="tab" id="t-glossary" data-tab="glossary">用語集</button>
+</nav>
+
+<!-- 概要 -->
+<section role="tabpanel" id="overview" aria-labelledby="t-overview">
+  <div class="stack">
+    <div class="panel next">
+      <div class="label">NEXT ― 次にやること</div>
+      <h3>持っている既製品を撮影して送る(15分)</h3>
+      <p>マウスやゲームのコントローラーなど、握り心地の参考になるものを撮ってください。写真をもとに、試作の寸法を好みの製品に寄せます。</p>
+      <ul>
+        <li>定規かA4の紙を横に添えて、<b>真横・真正面・真上</b>から1枚ずつ</li>
+        <li>自分で握っているところを横から1枚</li>
+        <li>スマホは50cmほど離して2倍ズーム(近くから撮ると寸法がゆがむ)</li>
+        <li>それぞれ「好き・普通・苦手」と理由をひとこと</li>
+        <li>あわせて:デスボ蘇生に使っているキー、移動中に押しっぱなしにしているキー</li>
+      </ul>
+    </div>
+
+    <div class="panel">
+      <h3>進み具合</h3>
+      <div class="track" aria-hidden="true"><span class="done"></span><span class="now"></span><span></span><span></span><span></span><span></span></div>
+      <div class="track-labels"><div>準備</div><div>外形づくり</div><div>電子部品</div><div>組み立て</div><div>実戦</div><div>販売(任意)</div></div>
+      <p style="margin-top:12px">いまは<b>2. 外形づくり</b>の最初。プリンターのセットアップと初印刷(眼鏡スタンド)は完了し、試作用の白いマットPETGも手元にある。</p>
+    </div>
+
+    <div class="cols">
+      <div class="panel">
+        <h3>最近終わったこと</h3>
+        <ul>
+          <li>A1 mini 到着・セットアップ・キャリブレーション</li>
+          <li>初印刷:眼鏡スタンド(1.4時間、成功)</li>
+          <li>白マットPETG(TINMORRY)を購入して登録</li>
+          <li>完成イメージ(白・滑らかな形)</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>このあと</h3>
+        <ul>
+          <li>PCに Bambu Studio を入れる</li>
+          <li>電子部品を注文する(届くまで数日)</li>
+          <li>試作を白PETGで刷って握る</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 手順 -->
+<section role="tabpanel" id="steps" aria-labelledby="t-steps" hidden>
+  <p>全体は6段階。<span class="who">「Claude」と書いた作業は、写真や感想をもらえればこちらでやります。</span></p>
+  <div class="panel">
+    <div class="phase"><div class="no">1</div><div>
+      <div class="head"><h3>準備</h3><span class="chip done">完了</span></div>
+      <ul>
+        <li>プリンター購入(A1 mini、周年セール ¥26,000)</li>
+        <li>開梱、固定具外し、自動キャリブレーション</li>
+        <li>フィラメント装填、初印刷(眼鏡スタンド)</li>
+      </ul>
+    </div></div>
+
+    <div class="phase"><div class="no">2</div><div>
+      <div class="head"><h3>外形づくり</h3><span class="chip now">いまここ</span></div>
+      <ol>
+        <li>既製品の写真を送る</li>
+        <li>試作の寸法を、好みの製品に寄せる <span class="who">Claude</span></li>
+        <li>PCに Bambu Studio を入れて、試作を白マットPETGで刷る(数時間。寝る前に流すと楽)</li>
+        <li>握って感想を伝える(「もっと太く」「親指が届かない」など、言葉でOK)</li>
+        <li>感想を数字に直して次の版を作る <span class="who">Claude</span> → 3〜5を、しっくりくるまで繰り返す</li>
+      </ol>
+      <p class="who" style="margin-top:6px">何度作り直しても合わないときは、手の撮影ガイド(リポジトリの docs/photo-guide.md)で手の寸法から作り直す。</p>
+    </div></div>
+
+    <div class="phase"><div class="no">3</div><div>
+      <div class="head"><h3>電子部品</h3><span class="chip later">これから</span></div>
+      <ol>
+        <li>部品を注文(2と並行して進められる)</li>
+        <li>Pico に CircuitPython を入れる(10分)</li>
+        <li>ブレッドボードにスティックとボタン数個を仮組み</li>
+        <li>ファームウェアを書き込んで、スティックの実測値に合わせる <span class="who">Claudeと一緒に</span></li>
+        <li>メモ帳と Apex の射撃訓練場で入力を確認</li>
+      </ol>
+    </div></div>
+
+    <div class="phase"><div class="no">4</div><div>
+      <div class="head"><h3>組み立て</h3><span class="chip later">これから</span></div>
+      <ol>
+        <li>確定した外形の中に、基板の置き場・底蓋・USB-Cの口を設計 <span class="who">Claude</span></li>
+        <li>本体・底蓋・ボタンを別々に印刷</li>
+        <li>スイッチとスティックをはんだ付けして組み込む</li>
+      </ol>
+    </div></div>
+
+    <div class="phase"><div class="no">5</div><div>
+      <div class="head"><h3>実戦</h3><span class="chip later">これから</span></div>
+      <ul>
+        <li>Apex で使いながら、デッドゾーン・ダッシュの発動条件・キー割り当てを調整</li>
+        <li>ゴール:バッテリーを巻きながらレレレしても、回復がキャンセルされないこと</li>
+      </ul>
+    </div></div>
+
+    <div class="phase"><div class="no">6</div><div>
+      <div class="head"><h3>販売</h3><span class="chip later">気が向いたら</span></div>
+      <ul>
+        <li>完成品の写真とデモ動画をSNSに出して反応を見る</li>
+        <li>反応があれば販売版を設計し、BOOTH で小ロット販売</li>
+      </ul>
+    </div></div>
+  </div>
+</section>
+
+<!-- 完成イメージ -->
+<section role="tabpanel" id="design" aria-labelledby="t-design" hidden>
+  <div class="shots">
+    <figure><img src="img/front.png" alt="手前から見た完成イメージ。白い本体の天面にスティックと10個のボタン、土台の縁に3つの床ボタン" width="1100" height="950"><figcaption>手前から。天面(親指)と土台の床ボタン</figcaption></figure>
+    <figure><img src="img/side.png" alt="モニター側から見た完成イメージ。柱の前面に4つのボタンが縦に並ぶ" width="1100" height="950"><figcaption>モニター側から。柱の前面(人差し指・中指)のボタン</figcaption></figure>
+  </div>
+  <div class="specs">
+    <div class="spec"><b>約140×80×121mm</b><span>大きさ(A1 mini の造形範囲 180mm 角に収まる)</span></div>
+    <div class="spec"><b>白マットPETG</b><span>本体の色と素材</span></div>
+    <div class="spec"><b>黒</b><span>スティックの頭・ESC・SHIFT</span></div>
+    <div class="spec"><b>有線 USB-C</b><span>無線にしない(理由は「設計の理由」)</span></div>
+  </div>
+  <p class="who" style="margin-top:10px">寸法は標準的な手を想定した仮の値。既製品の写真と試作の感想で調整する。</p>
+
+  <h2>ボタン配置</h2>
+  <div class="tablebox"><table>
+    <thead><tr><th>場所</th><th>押す指</th><th>ボタン</th><th>ピン</th></tr></thead>
+    <tbody>
+      <tr><td>天面の中央</td><td>親指</td><td>スティック → <span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span>(8方向)、押し込み <span class="key">C</span></td><td class="mono">GP26 / GP27 / GP11</td></tr>
+      <tr><td>天面の周り</td><td>親指</td><td><span class="key">1</span> <span class="key">2</span> <span class="key">3</span> <span class="key">4</span> <span class="key">Q</span> <span class="key">E</span> <span class="key">X</span> <span class="key">F</span> <span class="key">Tab</span> <span class="key dark">ESC</span></td><td class="mono">GP2〜GP10, GP16</td></tr>
+      <tr><td>柱の前面</td><td>人差し指・中指</td><td>上から <span class="key">SPACE</span> <span class="key dark">SHIFT</span> <span class="key">CTRL</span> <span class="key">G</span></td><td class="mono">GP13 / GP15 / GP14 / GP12</td></tr>
+      <tr><td>土台の縁</td><td>手をずらして</td><td><span class="key">REV</span> デスボ蘇生(キー未定) <span class="key">F1</span> Fnなしで直接 <span class="key">VIEW</span> 武器を眺める(<span class="key">N</span>)</td><td class="mono">GP17 / GP18 / GP19</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>2つの操作モード</h2>
+  <div class="cols">
+    <div class="panel"><h3>apex(はじめの設定)</h3><p>スティックを倒してもダッシュは乗らない。ダッシュは SHIFT ボタンだけ。回復中にどの方向へ倒してもキャンセルされない。</p></div>
+    <div class="panel"><h3>auto-dash</h3><p>スティックを92%以上倒すとダッシュ。ただし回復キー(4)を押してから7秒間はダッシュしない。</p></div>
+  </div>
+  <p class="who" style="margin-top:8px"><span class="key">Tab</span> とスティック押し込みを1.5秒長押しで切り替え。選んだモードは本体に保存される。</p>
+</section>
+
+<!-- 買い物リスト -->
+<section role="tabpanel" id="shop" aria-labelledby="t-shop" hidden>
+  <h2>買ったもの</h2>
+  <div class="tablebox"><table>
+    <thead><tr><th>品名</th><th>値段</th><th>状態</th></tr></thead>
+    <tbody>
+      <tr><td>Bambu Lab A1 mini</td><td class="num">¥26,000</td><td><span class="chip done">使用中</span></td></tr>
+      <tr><td>Bambu PLA ベーシック 黒(スプール付き)</td><td class="num">¥2,210</td><td><span class="chip done">使用中</span></td></tr>
+      <tr><td>Bambu PETG ベーシック 黒(スプール付き)</td><td class="num">¥1,885</td><td><span class="chip done">手元</span></td></tr>
+      <tr><td>予備ホットエンド 0.4mm ステンレス</td><td class="num">¥1,403</td><td><span class="chip done">手元</span></td></tr>
+      <tr><td>3P→2P 変換アダプター</td><td class="num">―</td><td><span class="chip done">使用中</span></td></tr>
+      <tr><td>TINMORRY マットPETG 白</td><td class="num">¥2,099</td><td><span class="chip done">手元</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>次に買うもの:電子部品</h2>
+  <p>届くまで数日かかるので早めに。秋月電子で1回、Amazonで1回にまとめると送料が少なくて済む。</p>
+  <div class="tablebox"><table>
+    <thead><tr><th>品名</th><th>数</th><th>目安</th><th>どこで</th><th>選び方</th></tr></thead>
+    <tbody>
+      <tr><td>Raspberry Pi Pico H</td><td class="num">1</td><td class="num">〜¥1,000</td><td><a href="https://akizukidenshi.com/" target="_blank" rel="noopener">秋月電子</a></td><td>無線の「W」ではなく無印。ピンヘッダ付きの「H」が楽</td></tr>
+      <tr><td>タクトスイッチ 6mm</td><td class="num">20</td><td class="num">〜¥300</td><td>秋月電子</td><td>使うのは18個。残りは予備</td></tr>
+      <tr><td>ブレッドボード+ジャンパワイヤ</td><td class="num">1式</td><td class="num">〜¥800</td><td>秋月電子 / Amazon</td><td>仮組み用</td></tr>
+      <tr><td>耐熱電子ワイヤ AWG28</td><td class="num">数色</td><td class="num">〜¥500</td><td>秋月電子</td><td>本組み用</td></tr>
+      <tr><td>ホールセンサー式スティック</td><td class="num">2</td><td class="num">¥1,000〜2,000</td><td><a href="https://www.amazon.co.jp/s?k=GuliKit+%E3%83%9B%E3%83%BC%E3%83%AB%E3%82%A8%E3%83%95%E3%82%A7%E3%82%AF%E3%83%88+%E3%82%B9%E3%83%86%E3%82%A3%E3%83%83%E3%82%AF+PS4" target="_blank" rel="noopener">Amazon</a></td><td>「Hall Effect」と明記、PS4用。1個は予備</td></tr>
+      <tr><td>microUSBケーブル</td><td class="num">1</td><td class="num">〜¥500</td><td>どこでも</td><td>データ通信対応(充電専用は不可)。家にあれば不要</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>工具(持っていなければ)</h2>
+  <div class="tablebox"><table>
+    <thead><tr><th>品名</th><th>目安</th><th>メモ</th></tr></thead>
+    <tbody>
+      <tr><td>はんだごて(温調式。HAKKO FX-600 など)</td><td class="num">¥2,000〜4,000</td><td>Amazon は偽物に注意。販売元を確認</td></tr>
+      <tr><td>はんだ 0.8mm・こて台</td><td class="num">〜¥1,500</td><td>こて台は安全のため必須</td></tr>
+      <tr><td>ニッパー・ワイヤーストリッパー</td><td class="num">〜¥1,000</td><td>ニッパーはサポート取りにも使う</td></tr>
+      <tr><td>テスター</td><td class="num">〜¥2,000</td><td>配線ミスを探すのに使う</td></tr>
+      <tr><td>デジタルノギス</td><td class="num">¥1,500〜2,500</td><td>部品の寸法を測る</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>収納</h2>
+  <div class="tablebox"><table>
+    <thead><tr><th>品名</th><th>目安</th><th>メモ</th></tr></thead>
+    <tbody>
+      <tr><td>トランク型工具箱(TRUSCO T-350 など)</td><td class="num">¥2,000〜3,000</td><td>工具とパーツケースが全部入るサイズ</td></tr>
+      <tr><td>仕切りを動かせるパーツケース</td><td class="num">2個</td><td>電子部品用とネジ用</td></tr>
+      <tr><td>耐熱シリコン作業マット</td><td class="num">¥1,000〜1,500</td><td>はんだ付け用</td></tr>
+      <tr><td>密閉容器+シリカゲル+湿度計</td><td class="num">¥1,500〜3,000</td><td>開けたフィラメントの保管用</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>あとで(組み立ての段階)</h2>
+  <div class="tablebox"><table>
+    <thead><tr><th>品名</th><th>メモ</th></tr></thead>
+    <tbody>
+      <tr><td>M3 ヒートインサート・M3×8 皿ネジ</td><td>底蓋の固定用</td></tr>
+      <tr><td>パネルマウント USB-C 延長ケーブル</td><td>コネクタを本体に固定して壊れにくくする</td></tr>
+      <tr><td>TINMORRY マットPETG 黒(任意)</td><td>黒いパーツのツヤを白とそろえたいとき</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- フィラメント -->
+<section role="tabpanel" id="filament" aria-labelledby="t-filament" hidden>
+  <h2>手持ちと使い道</h2>
+  <div class="tablebox"><table>
+    <thead><tr><th>フィラメント</th><th>プリンターでの設定</th><th>使い道</th></tr></thead>
+    <tbody>
+      <tr><td>TINMORRY マットPETG 白</td><td class="mono">Generic → PETG</td><td>コントローラーの試作と完成版</td></tr>
+      <tr><td>Bambu PETG ベーシック 黒</td><td class="mono">Bambu Lab → PETG Basic</td><td>スティックの頭・ESC・SHIFT</td></tr>
+      <tr><td>Bambu PLA ベーシック 黒</td><td class="mono">Bambu Lab → PLA Basic</td><td>MakerWorld の小物など、楽しみ用</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>買うときのルール</h2>
+  <div class="stack">
+    <div class="panel"><h3>太さは 1.75mm</h3><p>2.85mm という太いものもあるので注意。メーカーはどこでもよい。プリンターの一覧にないメーカーは「Generic」を選ぶ。</p></div>
+    <div class="warn"><h3>名前にこれが入っていたら買わない</h3><p><b>CF</b>(カーボン繊維)、<b>GF</b>(ガラス繊維)、<b>蓄光</b>、<b>金属入り</b>。ノズルの中を削って傷める。使うには焼入れ鋼のノズルが必要。</p></div>
+    <div class="panel"><h3>最初の1本はスプール付き</h3><p>リフィル(スプールなし)は、空になったスプールに付け替える2本目以降用。</p></div>
+  </div>
+
+  <h2>入れ方・抜き方</h2>
+  <div class="cols">
+    <div class="panel"><h3>入れる</h3><ol>
+      <li>先を斜めに切って、まっすぐに伸ばす</li>
+      <li>スプール側のチューブの入口から、止まるまで押し込む</li>
+      <li>画面の「フィラメント」→ Ext →「ロード」</li>
+      <li>種類を選ぶ(上の表の設定)</li>
+    </ol></div>
+    <div class="panel"><h3>抜く</h3><ol>
+      <li>画面の「フィラメント」→ Ext →「アンロード」</li>
+      <li>温まって中で切られるまで待つ(2〜3分)</li>
+      <li>スプール側からゆっくり引き抜く</li>
+      <li>先をスプールの縁の穴に差して留める</li>
+    </ol><p class="who">冷えたまま手で引っ張らないこと。</p></div>
+  </div>
+  <p style="margin-top:12px">抜いたスプールは、シリカゲルと一緒に袋に入れて口を閉じる。PETGは特に湿気に弱い。</p>
+</section>
+
+<!-- 設計の理由 -->
+<section role="tabpanel" id="why" aria-labelledby="t-why" hidden>
+  <p>市販品(Mouserpad v2)を自分で使ってみた不満と、Amazonレビューの不満から決めた仕様。</p>
+  <div class="tablebox"><table>
+    <thead><tr><th>決めたこと</th><th>理由</th></tr></thead>
+    <tbody>
+      <tr><td>ダッシュをスティックから切り離す</td><td>市販品は前に倒すと勝手にダッシュが乗り、レレレや前進でバッテの回復がキャンセルされる</td></tr>
+      <tr><td>ESC ボタンを付ける</td><td>市販品で一番多い不満。ゲーム中にキーボードへ手を伸ばすことになる</td></tr>
+      <tr><td>キーを自由に割り当てられる</td><td>市販品は固定で変えられない</td></tr>
+      <tr><td>土台に3ボタン(デスボ蘇生・F1・武器眺め)</td><td>キーボードで押しているキーを減らす。撃ち合い中に押さないので、手をずらして押す位置で足りる。縁に置き、頭を沈めて誤爆を防ぐ</td></tr>
+      <tr><td>グリップは下を太く、上を細く</td><td>市販品は小指と薬指が窮屈で、握り込んで手首が痛くなるという声</td></tr>
+      <tr><td>手首側が低い傾斜の土台</td><td>机の縁で手が浮いて、掌の小指側に荷重が集中する問題への対策</td></tr>
+      <tr><td>USB-C を本体に固定して出す</td><td>市販品はコネクタを面一に付けたせいで、3か月半で壊れたという報告</td></tr>
+      <tr><td>有線だけにする</td><td>無線にすると技適が必要。有線のUSB給電なら電気用品安全法(PSE)の対象外</td></tr>
+      <tr><td>ファームウェアは自作</td><td>販売するときにライセンスで困らないように</td></tr>
+      <tr><td>形はオリジナル</td><td>市販品の形をまねて売ると、不正競争防止法に触れるおそれ</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- 用語集 -->
+<section role="tabpanel" id="glossary" aria-labelledby="t-glossary" hidden>
+  <h2>プリンター</h2>
+  <div class="panel"><dl class="gloss">
+    <dt>スプール</dt><dd>フィラメントが巻いてあるリール</dd>
+    <dt>リフィル</dt><dd>スプールなしのフィラメント。空いたスプールに付け替えて使う</dd>
+    <dt>チューブ</dt><dd>スプールからツールヘッドまでフィラメントを通す白いパイプ</dd>
+    <dt>ツールヘッド</dt><dd>ノズルが付いて左右に動く箱。上の4つの穴にチューブを挿す</dd>
+    <dt>ノズル / ホットエンド</dt><dd>フィラメントを溶かして押し出す先端。予備を1本持っている</dd>
+    <dt>ビルドプレート</dt><dd>印刷物を作る金色の板。磁石で付いていて、外して曲げると印刷物が取れる</dd>
+    <dt>パージワイパー</dt><dd>試し出しのプラスチックを受け止めて、ノズルの先を掃除する部品</dd>
+    <dt>キャリブレーション</dt><dd>台の傾きや振動を測る自動調整</dd>
+    <dt>AMS lite</dt><dd>4色を自動で切り替える別売りユニット。今は不要</dd>
+  </dl></div>
+
+  <h2>素材</h2>
+  <div class="panel"><dl class="gloss">
+    <dt>PLA</dt><dd>一番刷りやすい素材。熱に弱く、夏の車内などで変形する</dd>
+    <dt>PETG</dt><dd>丈夫で熱に強い。完成版向き</dd>
+    <dt>マット</dt><dd>ツヤ消し。積層の筋や指紋が目立ちにくい</dd>
+    <dt>CF / GF</dt><dd>カーボン繊維 / ガラス繊維入り。ノズルを削るので使わない</dd>
+  </dl></div>
+
+  <h2>ソフト・データ</h2>
+  <div class="panel"><dl class="gloss">
+    <dt>Bambu Handy</dt><dd>スマホのアプリ。印刷の開始や進み具合の確認</dd>
+    <dt>Bambu Studio</dt><dd>PCのソフト。自分のデータを刷るときに使う(スライサー)</dd>
+    <dt>MakerWorld</dt><dd>他の人が作ったモデルを探して刷れるサイト</dd>
+    <dt>STL</dt><dd>3Dの形のデータ。試作は <span class="mono">proto_v1.stl</span></dd>
+  </dl></div>
+
+  <h2>電子部品</h2>
+  <div class="panel"><dl class="gloss">
+    <dt>Raspberry Pi Pico</dt><dd>コントローラーの頭脳。PCにはキーボードとして見える</dd>
+    <dt>ファームウェア</dt><dd>Pico に入れるプログラム。スティックやボタンをキー入力に変える</dd>
+    <dt>ホールセンサー</dt><dd>磁石で位置を読むスティック。削れないのでドリフトしにくい</dd>
+    <dt>タクトスイッチ</dt><dd>押すとカチッと鳴る小さなボタン</dd>
+    <dt>ブレッドボード</dt><dd>はんだ付けせずに部品を挿して試せる板</dd>
+    <dt>デッドゾーン</dt><dd>スティックを少し倒しただけでは反応しない範囲</dd>
+  </dl></div>
+</section>
+
+<p class="foot">最終更新 2026-11-19。データと設計ファイルはリポジトリの claude/3d-printer-controller-fglar7 ブランチにある。</p>
+</div>
+
+<script>
+(function(){
+  var tabs=[].slice.call(document.querySelectorAll('nav.tabs button'));
+  var names=tabs.map(function(b){return b.dataset.tab});
+  function show(name){
+    if(names.indexOf(name)<0) name='overview';
+    tabs.forEach(function(b){
+      var on=b.dataset.tab===name;
+      b.setAttribute('aria-selected',on?'true':'false');
+      b.tabIndex=on?0:-1;
+      document.getElementById(b.dataset.tab).hidden=!on;
+    });
+  }
+  tabs.forEach(function(b){
+    b.addEventListener('click',function(){
+      if(location.hash!=='#'+b.dataset.tab) location.hash=b.dataset.tab; else show(b.dataset.tab);
+    });
+  });
+  window.addEventListener('hashchange',function(){show(location.hash.slice(1))});
+  show(location.hash.slice(1));
+})();
+</script>
