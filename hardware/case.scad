@@ -11,12 +11,12 @@ $fn = 64;
 
 btn_hole     = 6.2;   // タクトスイッチキャップ径+クリアランス
 stick_hole_d = 30;    // スティック可動部の開口径
-side_btn_w   = 13;
-side_btn_h   = 7;
+side_btn_w   = 20.5;
+side_btn_h   = 9.5;
 
 difference() {
     body();
-    on_head(stick_pos[0], stick_pos[1])
+    on_head(0, 0)
         translate([0, 0, -30]) cylinder(d = stick_hole_d, h = 40);
     for (p = concat(button_layout, [esc_pos]))
         on_head(p[0], p[1]) translate([0, 0, -20]) cylinder(d = btn_hole, h = 30);
@@ -30,4 +30,4 @@ difference() {
 // - 内部空洞 + 底蓋 + M3インサートボス
 // - スティックモジュールの取付ボス、Kailh choc 用の角穴
 // - パネルマウントUSB-C口(レビュー分析#9: 直付け面一コネクタは破損する)
-// - ESC + 予備2ボタンの最終位置(レビュー分析#1, #4)
+// - 床ボタンの最終位置(くぼみの床で、薬指・小指が届くか試作で確かめる)

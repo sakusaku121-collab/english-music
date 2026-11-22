@@ -1,97 +1,124 @@
 // =============================================================
-// 滑らかな外形(楕円体の hull 連鎖)。concept.scad と case.scad が共用する。
+// 外形の定義。concept.scad と case.scad が共用する。
 //
-// 座標系: -X が手首側(ユーザー側)、+X がモニター側、Z が上。
-// 掌の腹は傾斜した土台に乗り、親指は天面(ユーザー側を向く)、
-// 人差し指・中指は柱の前面(+X)の側面ボタンにかかる。
+// 座標系: +X がモニター側、-X が手前(手首側)、+Y が左、Z が上。
+// 握り方: 左手の手のひらを本体の左面に当てて、指先を前へ伸ばす。
+// 親指は天面、人差し指・中指は前面のボタン、薬指・小指は前面下のくぼみに入る。
+// 大きさと比率は Mouserpad v2(幅90×奥行125×高さ120)の写真から取った。
+// 形そのものはまねず、寸法の比率だけを合わせている。
 // =============================================================
 
-grip_lean = 10;   // 柱の前傾(度)
-head_tilt = 30;   // 天面がユーザー側へ向く角度(度)
+// ---- 土台 ----
+base_t    = 16;    // 厚み
+base_x0   = -60;   // 平らな部分の後端
+base_x1   = 50;    // 前端(前面の真下。くぼみの床ボタンが乗る)
+base_y0   = -26;   // 右端
+base_y1   = 46;    // 左端(手のひら側に張り出す)
+base_r    = 16;    // 角の丸み
+base_tip  = -73;   // 手首側の先端(ここから後端まで斜めに上がる)
 
-// 土台: 手首側(低い)とグリップ側(高い)の半楕円体を hull したスロープ
-base_rear    = [-60, 0, 0];
-base_rear_r  = [26, 34, 9];
-base_front   = [  4, 0, 0];
-base_front_r = [44, 40, 18];
+// ---- 胴体: [高さz, 後ろ端x, 前端x, 幅の半分] ----
+// 前端が 30 まで下がっている高さ 18〜32 が、薬指・小指の入るくぼみ
+body = [
+    [14, -60, 34, 27],
+    [18, -58, 30, 25],
+    [32, -55, 30, 24],
+    [38, -53, 46, 24],
+    [43, -51, 52, 24],
+    [60, -46, 52, 23.5],
+    [80, -40, 52, 24],
+    [96, -35, 50, 26],
+];
+body_rb = 16;   // 後ろ側の角の丸み(手のひらに当たる)
+body_rf = 6;    // 前側の角の丸み
 
-// 柱の断面半径プロファイル [高さz, 半径]。細かい輪切りを hull で繋いで滑らかに見せる。
-// 下は太く(薬指・小指で握り込まずに済む)、上は細く(人差し指・中指でボタン操作)
-grip_rx = [[4, 36], [14, 31], [30, 25], [46, 21], [60, 19.5], [74, 20], [86, 23]];
-grip_ry = [[4, 33], [14, 29], [30, 24], [46, 21], [60, 19.5], [74, 20], [86, 23]];
-grip_z0 = 4;
-grip_z1 = 86;
-grip_step = 3;
-grip_x0 = 8;
+// ---- 天面(親指を置く平らな板) ----
+// 板の上の座標 (u, v): u は前方向、v は左方向、原点はスティックの中心
+stick_pos  = [12.4, -14.5, 114.3];   // 本体座標でのスティックの中心
+head_tilt  = 9;                      // 前が高くなる傾き(度)
+plate_u    = [-46.5, 40];            // 板の前後の範囲
+plate_v    = [-27.5, 48];            // 板の左右の範囲
+plate_r    = 14;                     // 板の角の丸み
+plate_t    = 8;                      // 板の厚み
 
-head_z = 99;
-head_r = [40, 36, 11];
-head_back = 7;   // 天面中心を柱軸からユーザー側へずらす量
-flare_z = 93;    // 首から天面へのラッパ状の広がり
-flare_r = [31, 29, 6];
+// 親指を中心にした2重の扇形(内側の半径 約22mm、外側 約37mm)
+button_layout = [
+    [ 21.0,  31.5],   // 3
+    [ 32.5,  20.5],   // 4
+    [ 21.0,  10.0],   // Tab
+    [  7.0,  21.0],   // F
+    [ -8.5,  20.5],   // Q
+    [-21.0,   7.5],   // E
+    [-20.5,  -9.0],   // X
+    [-36.5,   4.0],   // 1
+    [-36.0, -11.5],   // 2
+];
+esc_pos = [24, -15];   // ボタンのない右前。誤爆対策にファームウェアで長押しにしている
 
-function spine_x(z) = grip_x0 + z * tan(grip_lean);
-function rx_at(z) = lookup(z, grip_rx);
-function ry_at(z) = lookup(z, grip_ry);
-function head_surface_z(u, v) =
-    head_r[2] * sqrt(max(0, 1 - pow(u / head_r[0], 2) - pow(v / head_r[1], 2)));
+// 前面のボタンの高さ(下から): G, CTRL, SHIFT, SPACE
+side_button_z = [49, 63, 77, 91];
 
-module ell(p, r) translate(p) scale(r) sphere(1);
+// 床ボタン: 前面の下のくぼみの床。薬指・小指の先で押し下げる
+base_buttons = [[40, 14], [40, 0], [40, -14]];
 
-module ring(z) ell([spine_x(z), 0, z], [rx_at(z), ry_at(z), 2]);
+body_step = 2;  // 輪切りの間隔。表の値の間は曲線(Catmull-Rom)でつなぐ
 
-module flare() ell([spine_x(flare_z) - head_back / 2, 0, flare_z], flare_r);
+function cr(p0, p1, p2, p3, t) =
+    0.5 * (2 * p1 + (p2 - p0) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t
+           + (3 * p1 - p0 - 3 * p2 + p3) * t * t * t);
+
+function body_at(z, col) =
+    let (n = len(body),
+         i = min(n - 2, max([for (k = [0 : n - 1]) if (body[k][0] <= z) k])),
+         t = (z - body[i][0]) / (body[i + 1][0] - body[i][0]))
+    cr(body[max(i - 1, 0)][col], body[i][col], body[i + 1][col], body[min(i + 2, n - 1)][col], t);
+
+function front_x(z) = body_at(z, 2);
+
+body_zs = concat([for (z = [body[0][0] : body_step : body[len(body) - 1][0] - 0.01]) z],
+                 [body[len(body) - 1][0]]);
+
+module rrect(x0, x1, y0, y1, r, h)
+    hull()
+        for (x = [x0 + r, x1 - r], y = [y0 + r, y1 - r])
+            translate([x, y, 0]) cylinder(r = r, h = h);
+
+module slice(b)
+    translate([0, 0, b[0]])
+        hull()
+            for (s = [-1, 1]) {
+                translate([b[1] + body_rb, s * (b[3] - body_rb), 0]) cylinder(r = body_rb, h = 0.5);
+                translate([b[2] - body_rf, s * (b[3] - body_rf), 0]) cylinder(r = body_rf, h = 0.5);
+            }
 
 module head_frame()
-    translate([spine_x(head_z) - head_back, 0, head_z])
-        rotate([0, -head_tilt, 0])
-            children();
+    translate(stick_pos) rotate([0, -head_tilt, 0]) children();
 
-module head() head_frame() scale(head_r) sphere(1);
+module head()
+    head_frame()
+        translate([0, 0, -plate_t])
+            rrect(plate_u[0], plate_u[1], plate_v[0], plate_v[1], plate_r, plate_t);
 
-// 天面の局所座標 (u, v) の表面上に子要素を置く(u+ がモニター側の縁)
-module on_head(u, v) head_frame() translate([u, v, head_surface_z(u, v)]) children();
+// 天面の (u, v) に子要素を置く。子要素の +Z が天面の外向き
+module on_head(u, v) head_frame() translate([u, v, 0]) children();
 
-// 柱前面の高さ z の表面上に子要素を置く(+X 向き)
-module on_front(z, y = 0)
-    translate([spine_x(z) + rx_at(z), y, z]) rotate([0, 90 + grip_lean, 0]) children();
+// 前面の高さ z に子要素を置く。子要素の +Z が前向き、子要素の X が縦方向
+module on_front(z, y = 0) translate([front_x(z), y, z]) rotate([0, 90, 0]) children();
 
-module base() hull() { ell(base_rear, base_rear_r); ell(base_front, base_front_r); }
+module on_base(b) translate([b[0], b[1], base_t]) children();
+
+module base()
+    hull() {
+        rrect(base_x0, base_x1, base_y0, base_y1, base_r, base_t);
+        translate([base_tip + 12, (base_y0 + base_y1) / 2, 0])
+            scale([12, 28, 1]) cylinder(r = 1, h = 3);
+    }
+
+module slice_at(z) slice([z, body_at(z, 1), body_at(z, 2), body_at(z, 3)]);
 
 module grip() {
-    for (z = [grip_z0 : grip_step : grip_z1 - grip_step])
-        hull() { ring(z); ring(min(z + grip_step, grip_z1)); }
-    hull() { ring(grip_z1); flare(); }
-    hull() { flare(); head(); }
+    for (i = [0 : len(body_zs) - 2]) hull() { slice_at(body_zs[i]); slice_at(body_zs[i + 1]); }
+    hull() { slice(body[len(body) - 1]); head(); }
 }
 
-module body() {
-    intersection() {
-        union() { base(); grip(); }
-        translate([-200, -200, 0]) cube([400, 400, 300]);
-    }
-}
-
-// 天面のボタン配置(天面局所座標 [u, v])。親指の可動域に合わせて扇状
-button_layout = [
-    [ 20,  20], [ 26,   6], [ 22,  -9],   // 3, 4, Tab(奥の列)
-    [  6,  27], [-10,  26],               // F, Q(左の弧)
-    [-24,  15], [-28,   0],               // E, X
-    [-24, -15], [-12, -26],               // 1, 2(手前)
-];
-esc_pos   = [ 10, -24];
-stick_pos = [  0,   2];
-
-// 柱前面のボタン(下から): G, CTRL, SHIFT(ダッシュ), SPACE
-side_button_z = [42, 53, 64, 75];
-
-// 土台の床ボタン: [x, y, 表面z, X回転, Y回転]。掌の乗らない親指側(-Y)の縁。
-// 表面の高さと傾きは base() の STL をレイキャストして求めた値。
-// 土台の寸法を変えたら測り直すこと。
-base_buttons = [
-    [-52, -24, 7.86, 17.5, -7.1],
-    [-36, -27, 8.86, 22.4, -6.6],
-    [-20, -30, 9.46, 29.7, -6.1],
-];
-
-module on_base(b) translate([b[0], b[1], b[2]]) rotate([b[3], b[4], 0]) children();
+module body() { base(); grip(); }

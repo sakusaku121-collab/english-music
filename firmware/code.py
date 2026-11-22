@@ -141,6 +141,8 @@ stick_active = False
 auto_dash_on = False
 suppress_until = 0.0         # この時刻までオートダッシュ禁止
 combo_since = None           # プロファイル切替コンボの押下開始時刻
+hold_pending = {}            # 長押し待ちのボタン → 押し始めた時刻
+hold_sent = set()            # 長押しが成立して送信中のボタン
 
 blink_profile(profile_index)
 
@@ -165,15 +167,30 @@ while True:
         name = button_names[event.key_number]
         if event.pressed:
             pressed_buttons.add(name)
-            set_key(name, True)
+            if name in config.HOLD_TO_SEND:
+                hold_pending[name] = now
+            else:
+                set_key(name, True)
             # 回復キー等が押されたらオートダッシュを一定時間抑制
             ad = profile["auto_dash"]
             if name in ad["suppress_after"]:
                 suppress_until = now + ad["suppress_seconds"]
         else:
             pressed_buttons.discard(name)
-            set_key(name, False)
+            hold_pending.pop(name, None)
+            if name in config.HOLD_TO_SEND:
+                if name in hold_sent:
+                    hold_sent.discard(name)
+                    set_key(name, False)
+            else:
+                set_key(name, False)
         event = keys.events.get()
+
+    for name, since in list(hold_pending.items()):
+        if now - since >= config.HOLD_TO_SEND[name]:
+            del hold_pending[name]
+            hold_sent.add(name)
+            set_key(name, True)
 
     # ---- プロファイル切替コンボ ----
     if all(n in pressed_buttons for n in config.PROFILE_SWITCH_COMBO):
@@ -182,6 +199,8 @@ while True:
         elif now - combo_since >= config.PROFILE_SWITCH_HOLD_SEC:
             # 全キー解放してからプロファイルを進める
             keyboard.release_all()
+            hold_pending.clear()
+            hold_sent.clear()
             pressed_move_keys = set()
             stick_active = False
             auto_dash_on = False

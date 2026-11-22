@@ -109,12 +109,13 @@ section[role="tabpanel"]{min-width:0}
   <div class="stack">
     <div class="panel next">
       <div class="label">NEXT ― 次にやること</div>
-      <h3>Mouserpad v2 を撮影して送る(5分)</h3>
-      <p>外寸(90×125×120mm)は分かったので、写真は2枚だけ。柱の太さや傾き、天面の角度を見て、試作をMouserpadに寄せます。</p>
+      <h3>試作2号(proto_v2.stl)を白PETGで刷って握る</h3>
+      <p>Mouserpad v2 の写真から寸法を取り直した版。握って、Mouserpadと比べた感想を教えてください。</p>
       <ul>
-        <li><b>真横</b>から、定規かA4の紙を横に添えて1枚</li>
-        <li>いつも通り<b>握っているところ</b>を横から1枚</li>
-        <li>スマホは50cmほど離して2倍ズーム(近くから撮ると寸法がゆがむ)</li>
+        <li>Bambu Studio でファイルを開き、フィラメントは Generic PETG、サポートは「自動」</li>
+        <li>中は詰まった形なので、インフィル(中の詰め具合)は 10% に下げると早く刷れる</li>
+        <li>刷る前にプレートを洗剤で洗って、スティックのりを薄く塗る</li>
+        <li>見てほしいところ:太さ、天面の傾き、親指が扇形のボタンに届くか、人差し指・中指が前面のボタンに届くか、くぼみの床ボタンに薬指・小指が届くか</li>
       </ul>
     </div>
 
@@ -132,15 +133,14 @@ section[role="tabpanel"]{min-width:0}
           <li>A1 mini 到着・セットアップ・キャリブレーション</li>
           <li>初印刷:眼鏡スタンド(1.4時間、成功)</li>
           <li>白マットPETG(TINMORRY)を購入して登録</li>
-          <li>完成イメージ(白・滑らかな形)</li>
+          <li>Mouserpad v2 を撮影して、寸法と扇形の配置を試作に反映</li>
         </ul>
       </div>
       <div class="panel">
         <h3>このあと</h3>
         <ul>
-          <li>PCに Bambu Studio を入れる</li>
           <li>ホールセンサーのスティックをAmazonで注文する</li>
-          <li>試作を白PETGで刷って握る</li>
+          <li>握った感想をもとに次の版を作る</li>
         </ul>
       </div>
     </div>
@@ -213,25 +213,26 @@ section[role="tabpanel"]{min-width:0}
 <!-- 完成イメージ -->
 <section role="tabpanel" id="design" aria-labelledby="t-design" hidden>
   <div class="shots">
-    <figure><img src="img/front.png" alt="手前から見た完成イメージ。白い本体の天面にスティックと10個のボタン、土台の縁に3つの床ボタン" width="1100" height="950"><figcaption>手前から。天面(親指)と土台の床ボタン</figcaption></figure>
-    <figure><img src="img/side.png" alt="モニター側から見た完成イメージ。柱の前面に4つのボタンが縦に並ぶ" width="1100" height="950"><figcaption>モニター側から。柱の前面(人差し指・中指)のボタン</figcaption></figure>
+    <figure><img src="img/front.png" alt="左手前から見た完成イメージ。天面にスティックと扇形に並ぶボタン、左に張り出した土台" width="1100" height="950"><figcaption>左手前から。天面(親指)と、手のひら側に張り出した土台</figcaption></figure>
+    <figure><img src="img/top.png" alt="天面を真上から見た図。スティックの左と手前に2重の扇形でボタンが並ぶ" width="1100" height="950"><figcaption>天面。Mouserpadと同じ2重の扇形。右前のボタンのない所にESC</figcaption></figure>
+    <figure><img src="img/side.png" alt="横から見た完成イメージ。前面に4つのボタン、その下に指が入るくぼみと床ボタン" width="1100" height="950"><figcaption>横から(左が手前)。前面の4ボタンと、その下のくぼみの床ボタン</figcaption></figure>
   </div>
   <div class="specs">
-    <div class="spec"><b>約140×80×121mm</b><span>大きさ(A1 mini の造形範囲 180mm 角に収まる)</span></div>
+    <div class="spec"><b>約125×88×122mm</b><span>大きさ(A1 mini の造形範囲 180mm 角に収まる)</span></div>
     <div class="spec"><b>白マットPETG</b><span>本体の色と素材</span></div>
     <div class="spec"><b>黒</b><span>スティックの頭・ESC・SHIFT</span></div>
     <div class="spec"><b>有線 USB-C</b><span>無線にしない(理由は「設計の理由」)</span></div>
   </div>
-  <p class="who" style="margin-top:10px">寸法は標準的な手を想定した仮の値。既製品の写真と試作の感想で調整する。</p>
+  <p class="who" style="margin-top:10px">大きさと比率は Mouserpad v2(90×125×120mm)の写真から取った。形そのものはまねていない。試作の感想で調整する。</p>
 
   <h2>ボタン配置</h2>
   <div class="tablebox"><table>
     <thead><tr><th>場所</th><th>押す指</th><th>ボタン</th><th>ピン</th></tr></thead>
     <tbody>
       <tr><td>天面の中央</td><td>親指</td><td>スティック → <span class="key">W</span><span class="key">A</span><span class="key">S</span><span class="key">D</span>(8方向)、押し込み <span class="key">C</span></td><td class="mono">GP26 / GP27 / GP11</td></tr>
-      <tr><td>天面の周り</td><td>親指</td><td><span class="key">1</span> <span class="key">2</span> <span class="key">3</span> <span class="key">4</span> <span class="key">Q</span> <span class="key">E</span> <span class="key">X</span> <span class="key">F</span> <span class="key">Tab</span> <span class="key dark">ESC</span></td><td class="mono">GP2〜GP10, GP16</td></tr>
-      <tr><td>柱の前面</td><td>人差し指・中指</td><td>上から <span class="key">SPACE</span> <span class="key dark">SHIFT</span> <span class="key">CTRL</span> <span class="key">G</span></td><td class="mono">GP13 / GP15 / GP14 / GP12</td></tr>
-      <tr><td>土台の縁</td><td>手をずらして</td><td><span class="key">REV</span> デスボ蘇生(<span class="key">L</span>) <span class="key">F1</span> Fnなしで直接 <span class="key">VIEW</span> 武器を眺める(<span class="key">N</span>)</td><td class="mono">GP17 / GP18 / GP19</td></tr>
+      <tr><td>天面の周り</td><td>親指</td><td><span class="key">1</span> <span class="key">2</span> <span class="key">3</span> <span class="key">4</span> <span class="key">Q</span> <span class="key">E</span> <span class="key">X</span> <span class="key">F</span> <span class="key">Tab</span> <span class="key dark">ESC</span>(0.3秒長押しで送る。かすっても誤爆しない)</td><td class="mono">GP2〜GP10, GP16</td></tr>
+      <tr><td>前面(モニター側)</td><td>人差し指・中指</td><td>上から <span class="key">SPACE</span> <span class="key dark">SHIFT</span> <span class="key">CTRL</span> <span class="key">G</span></td><td class="mono">GP13 / GP15 / GP14 / GP12</td></tr>
+      <tr><td>前面の下のくぼみの床</td><td>薬指・小指で押し下げる</td><td><span class="key">REV</span> デスボ蘇生(<span class="key">L</span>) <span class="key">F1</span> Fnなしで直接 <span class="key">VIEW</span> 武器を眺める(<span class="key">N</span>)</td><td class="mono">GP17 / GP18 / GP19</td></tr>
     </tbody>
   </table></div>
 
@@ -361,7 +362,7 @@ section[role="tabpanel"]{min-width:0}
       <tr><td>ダッシュをスティックから切り離す</td><td>市販品は前に倒すと勝手にダッシュが乗り、レレレや前進でバッテの回復がキャンセルされる</td></tr>
       <tr><td>ESC ボタンを付ける</td><td>市販品で一番多い不満。ゲーム中にキーボードへ手を伸ばすことになる</td></tr>
       <tr><td>キーを自由に割り当てられる</td><td>市販品は固定で変えられない</td></tr>
-      <tr><td>土台に3ボタン(デスボ蘇生・F1・武器眺め)</td><td>キーボードで押しているキーを減らす。撃ち合い中に押さないので、手をずらして押す位置で足りる。縁に置き、頭を沈めて誤爆を防ぐ</td></tr>
+      <tr><td>土台に3ボタン(デスボ蘇生・F1・武器眺め)</td><td>キーボードで押しているキーを減らす。撃ち合い中に押さないので、前面の下のくぼみの床に置いて、薬指・小指で押し下げる。頭を沈めて誤爆を防ぐ</td></tr>
       <tr><td>天面のボタンは親指を中心に扇形</td><td>Mouserpadで自分が一番気に入っているところ。痛くなるところもないので、全体の大きさもMouserpadに寄せる(形はまねず、寸法の比率だけ参考にする)</td></tr>
       <tr><td>グリップは下を太く、上を細く</td><td>市販品は小指と薬指が窮屈で、握り込んで手首が痛くなるという声</td></tr>
       <tr><td>手首側が低い傾斜の土台</td><td>机の縁で手が浮いて、掌の小指側に荷重が集中する問題への対策</td></tr>
@@ -405,7 +406,7 @@ section[role="tabpanel"]{min-width:0}
     <dt>Bambu Handy</dt><dd>スマホのアプリ。印刷の開始や進み具合の確認</dd>
     <dt>Bambu Studio</dt><dd>PCのソフト。自分のデータを刷るときに使う(スライサー)</dd>
     <dt>MakerWorld</dt><dd>他の人が作ったモデルを探して刷れるサイト</dd>
-    <dt>STL</dt><dd>3Dの形のデータ。試作は <span class="mono">proto_v1.stl</span></dd>
+    <dt>STL</dt><dd>3Dの形のデータ。試作は <span class="mono">proto_v2.stl</span></dd>
   </dl></div>
 
   <h2>電子部品</h2>
@@ -419,7 +420,7 @@ section[role="tabpanel"]{min-width:0}
   </dl></div>
 </section>
 
-<p class="foot">最終更新 2026-11-22。データと設計ファイルはリポジトリの claude/3d-printer-controller-fglar7 ブランチにある。</p>
+<p class="foot">最終更新 2026-11-22(試作2号)。データと設計ファイルはリポジトリの claude/3d-printer-controller-fglar7 ブランチにある。</p>
 </div>
 
 <script>
