@@ -84,6 +84,15 @@ dl.gloss dt{font-weight:700;padding-right:12px}
 @media (max-width:520px){dl.gloss{grid-template-columns:1fr} dl.gloss dt{border-bottom:0;padding-bottom:0} .track-labels{font-size:10px}}
 .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
 section[role="tabpanel"]{min-width:0}
+.ok{color:var(--done);font-weight:700}.ng{color:var(--accent);font-weight:700}.mid{color:var(--now);font-weight:700}
+.diagram{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:12px}
+.diagram svg{display:block;max-width:100%;height:auto}
+.diagram text{fill:var(--ink);font-family:var(--body);font-size:11px}
+.diagram .dim{fill:var(--muted);font-size:10px}
+.diagram .shape{fill:var(--bg);stroke:var(--ink);stroke-width:1.5}
+.diagram .guess{fill:none;stroke:var(--accent);stroke-width:1.2;stroke-dasharray:4 3}
+.diagram .line{stroke:var(--muted);stroke-width:1}
+.diagram .key{fill:var(--surface);stroke:var(--ink);stroke-width:1}
 .foot{margin-top:40px;font-size:12px;color:var(--muted)}
 </style>
 
@@ -100,6 +109,7 @@ section[role="tabpanel"]{min-width:0}
   <button role="tab" id="t-design" data-tab="design">完成イメージ</button>
   <button role="tab" id="t-shop" data-tab="shop">買い物リスト</button>
   <button role="tab" id="t-filament" data-tab="filament">フィラメント</button>
+  <button role="tab" id="t-ref" data-tab="ref">既製品の分析</button>
   <button role="tab" id="t-why" data-tab="why">設計の理由</button>
   <button role="tab" id="t-glossary" data-tab="glossary">用語集</button>
 </nav>
@@ -377,6 +387,87 @@ section[role="tabpanel"]{min-width:0}
       <tr><td>起動ごとにスティックの中心を測り直す</td><td>ホールセンサーでも、使ううちに中心がずれることがある</td></tr>
     </tbody>
   </table></div>
+</section>
+
+<!-- 既製品の分析 -->
+<section role="tabpanel" id="ref" aria-labelledby="t-ref" hidden>
+  <div class="warn"><h3>正直な状況</h3>
+  <p>試作2〜5号の形は、Mouserpad v2 の写真を<b>目で見て数字を見積もった</b>だけで作っていました。写真の輪郭を画像処理で取り出したり、一緒に写っている A4 の紙を基準に寸法を測ったりはしていません。都合のよい数字だけを使い、写真に写っていたのに形に入れなかった部分もあります。前提がずれていたので、そこから先の形も全部ずれていました。</p>
+  <p>もう1つ、作業環境が入れ替わったため、送ってもらった Mouserpad の写真がこちらに残っていません。下の表は、当時のメモ(設計ノート)に残した内容から書いています。</p></div>
+
+  <h2>写真から何をどう取ったか</h2>
+  <div class="tablebox"><table>
+    <thead><tr><th>部位</th><th>根拠にしたもの</th><th>読み取った値</th><th>取り方</th><th>信頼度</th></tr></thead>
+    <tbody>
+      <tr><td>全体の大きさ</td><td>商品ページの仕様</td><td>幅90×奥行125×高さ120mm</td><td>文字で書かれた値</td><td class="ok">高</td></tr>
+      <tr><td>天面の幅・胴体の幅</td><td>正面の写真</td><td>天面 約75mm、胴体 約48mm</td><td>全体の幅90mmとの比率を目で見積もり</td><td class="mid">中〜低</td></tr>
+      <tr><td>土台の張り出し</td><td>正面の写真</td><td>胴体の左へ 約22mm</td><td>目で見積もり</td><td class="mid">低</td></tr>
+      <tr><td>胴体の後ろ側の傾き</td><td>横の写真(A4の上)</td><td>手前へ約19°</td><td>目で見積もり。遠近の補正なし</td><td class="ng">低</td></tr>
+      <tr><td>前面の形</td><td>横の写真</td><td>ほぼ垂直</td><td>目で見て判断</td><td class="mid">中</td></tr>
+      <tr><td>前面ボタンの高さ</td><td>横・前面の写真</td><td>高さ 約40〜90mm に3つ、約15mm間隔</td><td>目で見積もり</td><td class="mid">中〜低</td></tr>
+      <tr><td>前面下のくぼみ</td><td>横の写真</td><td>高さ 約17〜35mm</td><td>目で見積もり</td><td class="ng">低</td></tr>
+      <tr><td>天面の傾き</td><td>横の写真</td><td>約9〜11°</td><td>目で見積もり。実物より緩いと指摘を受けた</td><td class="ng">誤りの可能性大</td></tr>
+      <tr><td>天面のボタンの並び</td><td>真上の写真</td><td>スティック中心に内側 半径約22mm(Tab F Q E X)、外側 約37mm(3 4 1 2)</td><td>キーの大きさとの比率で見積もり</td><td class="mid">中</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>写真に写っていたのに取り入れていなかったこと</h2>
+  <div class="tablebox"><table>
+    <thead><tr><th>部位</th><th>実物</th><th>試作でやっていたこと</th></tr></thead>
+    <tbody>
+      <tr><td>土台の床</td><td>小指側の手の側面を置く場所が、手に合わせてへこんでいる。手を置くだけで握る形が決まり、手が浮かない</td><td>平らな板にしていた(指摘を受けてから追加)</td></tr>
+      <tr><td>全体の高さの配分</td><td>手の側面を土台に置いた状態で、指と親指が自然に届く高さになっている</td><td>柱を高くしすぎて、全体が上すぎた</td></tr>
+      <tr><td>胴体の太さ</td><td>写真の形のまま</td><td>レビューの「下を太く、上を細く」を自分で当てはめた。3号では奥行きを約95mmと読み違えた</td></tr>
+      <tr><td>天面の外形</td><td>写真に写っている独自の外形</td><td>使わず、自分で考えた形にした</td></tr>
+      <tr><td>前面ボタンの形</td><td>横長の大きなボタン3つ</td><td>小さめのボタンにしていた</td></tr>
+      <tr><td>寸法の基準</td><td>写真に A4 の紙(210×297mm)が写っている</td><td>基準に使わなかった</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>当時どう捉えていたか(イメージ図)</h2>
+  <p class="who">黒い線は、当時のメモの数字から描いた形。オレンジの点線は、写真から取れていなかった・誤っていた可能性が高いところ。</p>
+  <div class="diagram">
+  <svg viewBox="0 0 640 300" role="img" aria-label="当時の理解を表した横から見た図と真上から見た図">
+    <text x="10" y="18">横から(左が手前、右がモニター側)</text>
+    <g transform="translate(40,270) scale(1.6,-1.6)">
+      <rect class="shape" x="0" y="0" width="125" height="10"/>
+      <path class="shape" d="M30 10 L 47 60 L 58 110 L 135 120 L 125 110 L 125 35 L 108 35 L 108 17 L 112 10 Z"/>
+      <path class="guess" d="M5 10 Q 25 3 50 10"/>
+      <path class="guess" d="M58 110 L 125 130"/>
+      <rect class="key" x="125" y="40" width="3" height="10"/><rect class="key" x="125" y="55" width="3" height="10"/><rect class="key" x="125" y="70" width="3" height="10"/>
+    </g>
+    <text class="dim" x="40" y="292">奥行き125mm(仕様)</text>
+    <text class="dim" x="250" y="60">天面の傾き 約9〜11°(緩すぎた可能性)</text>
+    <text class="dim" x="235" y="215">ボタン 高さ約40〜90mm</text>
+    <text class="dim" x="10" y="255">床のへこみ(未反映)</text>
+    <text class="dim" x="55" y="145">後ろの傾き 約19°</text>
+    <text x="360" y="18">真上から(上がモニター側)</text>
+    <g transform="translate(480,160)">
+      <rect class="shape" x="-48" y="-60" width="96" height="118" rx="18"/>
+      <circle class="line" cx="20" cy="0" r="22" fill="none"/>
+      <circle class="line" cx="20" cy="0" r="37" fill="none"/>
+      <circle class="key" cx="20" cy="0" r="9"/>
+      <text class="dim" x="44" y="-30">内側 r≈22</text>
+      <text class="dim" x="44" y="-44">外側 r≈37</text>
+      <path class="guess" d="M-48 -60 L 48 -60"/>
+      <text class="dim" x="-60" y="-68">天面の外形(写真の形を使っていない)</text>
+      <text class="dim" x="-60" y="78">天面 約80×75mm(目測)</text>
+    </g>
+  </svg></div>
+
+  <h2>これからのやり方</h2>
+  <ol>
+    <li>Mouserpad の写真を撮り直してもらう(右の4枚)</li>
+    <li>黒い本体と白い紙の境目を画像処理で取り出し、A4 の紙を基準に mm に直す</li>
+    <li>取り出した輪郭と試作の形を重ねた図を、このタブに載せる。根拠にした写真と、どの部分を測ったかも書く</li>
+    <li>形は、その輪郭に合わせてから、変える部分(ESC、薬指ボタン、床ボタンなど)だけ変える</li>
+  </ol>
+  <div class="panel"><h3>撮り直してほしい写真</h3><ul>
+    <li>真横から:左右それぞれ1枚。A4 の紙を本体の後ろに立てるか下に敷き、紙の四隅が写るように</li>
+    <li>真正面から(モニター側)と、真後ろから(手前側)</li>
+    <li>真上から:天面の外形とボタンが全部写るように</li>
+    <li>どれもスマホを本体と同じ高さで、50cm離して2倍ズーム</li>
+  </ul></div>
 </section>
 
 <!-- 用語集 -->
