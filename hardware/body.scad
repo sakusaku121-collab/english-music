@@ -6,41 +6,50 @@
 // 親指は天面、人差し指・中指は前面のボタン、薬指・小指は前面下のくぼみに入る。
 // 大きさと比率は Mouserpad v2(幅90×奥行125×高さ120)の写真から取った。
 // 形そのものはまねず、寸法の比率だけを合わせている。
+//
+// 胴体は、角の丸い四角(超楕円)の断面を下から上へなめらかにつないだ1枚の曲面。
+// 天面は胴体の上端を傾けて平らにし、縁を丸めている。
 // =============================================================
 
-// ---- 土台 ----
-base_t    = 16;    // 厚み
-base_x0   = -60;   // 平らな部分の後端
-base_x1   = 50;    // 前端(前面の真下。くぼみの床ボタンが乗る)
-base_y0   = -26;   // 右端
-base_y1   = 46;    // 左端(手のひら側に張り出す)
-base_r    = 16;    // 角の丸み
-base_tip  = -73;   // 手首側の先端(ここから後端まで斜めに上がる)
+ring_n = 72;   // 断面1周の点の数
 
-// ---- 胴体: [高さz, 後ろ端x, 前端x, 幅の半分] ----
-// 前端が 30 まで下がっている高さ 18〜32 が、薬指・小指の入るくぼみ
+// ---- 土台: 角の丸い楕円の板。手首側は薄くなる ----
+base_x  = [-73, 53];   // 前後の範囲
+base_y  = [-32, 46];   // 左右の範囲(左の手のひら側に張り出す)
+base_h  = 12;          // 厚み
+base_rf = 5;           // 上の縁の丸み
+base_se = 2.5;         // 断面の角の丸さ(2 で楕円、大きいほど四角に近い)
+function base_thin(x) = lookup(x, [[-73, 0.35], [-40, 1]]);
+
+// ---- 胴体: [高さz, 後ろ端x, 前端x, 右端y, 左端y] ----
+// 高さ 20〜30 の前端が下がっているところが、薬指・小指の入るくぼみ。
+// 高さ 60 あたりが一番細いくびれで、そこから天面へ向かって広がる。
 body = [
-    [14, -60, 34, 27],
-    [18, -58, 30, 25],
-    [32, -55, 30, 24],
-    [38, -53, 46, 24],
-    [43, -51, 52, 24],
-    [60, -46, 52, 23.5],
-    [80, -40, 52, 24],
-    [96, -35, 50, 26],
+    [  8, -62, 36, -32, 38  ],
+    [ 14, -57, 31, -27, 32  ],
+    [ 20, -54, 29, -25, 28  ],
+    [ 30, -52, 30, -24, 26  ],
+    [ 38, -50, 46, -24, 26  ],
+    [ 46, -48, 52, -24, 26  ],
+    [ 60, -45, 52, -24, 25  ],
+    [ 75, -41, 52, -26, 27  ],
+    [ 88, -38, 52, -31, 30  ],
+    [ 98, -35, 52, -38, 33  ],
+    [106, -34, 52, -42, 33.5],
+    [108.7, -34, 52, -42, 33.5],
 ];
-body_rb = 16;   // 後ろ側の角の丸み(手のひらに当たる)
-body_rf = 6;    // 前側の角の丸み
+function body_se(z) = lookup(z, [[60, 3], [100, 4.2]]);   // 断面の角の丸さ(天面に近いほど四角寄り)
+body_step = 2;      // 輪切りの間隔
+top_r     = 5;      // 天面の縁の丸み
 
-// ---- 天面(親指を置く平らな板) ----
-// 板の上の座標 (u, v): u は前方向、v は左方向、原点はスティックの中心
-stick_pos  = [12.4, -14.5, 114.3];   // 本体座標でのスティックの中心
-head_tilt  = 9;                      // 前が高くなる傾き(度)
-plate_u    = [-46.5, 40];            // 板の前後の範囲
-plate_v    = [-27.5, 48];            // 板の左右の範囲
-plate_r    = 14;                     // 板の角の丸み
-plate_t    = 8;                      // 板の厚み
+// ---- 天面(親指を置く平らな面) ----
+head_tilt = 9;                                   // 前が高くなる傾き(度)
+stick_xy  = [12.4, -14.5];                       // スティックの中心
+top_z     = body[len(body) - 1][0] + top_r;      // スティック位置での天面の高さ
+tilt_from = 92;                                  // ここから上を天面の傾きに合わせて傾ける
+stick_pos = [stick_xy[0], stick_xy[1], top_z];
 
+// 天面の上の座標 (u, v): u は前方向、v は左方向、原点はスティックの中心
 // 親指を中心にした2重の扇形(内側の半径 約22mm、外側 約37mm)
 button_layout = [
     [ 21.0,  31.5],   // 3
@@ -59,66 +68,97 @@ esc_pos = [24, -15];   // ボタンのない右前。誤爆対策にファーム
 side_button_z = [49, 63, 77, 91];
 
 // 床ボタン: 前面の下のくぼみの床。薬指・小指の先で押し下げる
-base_buttons = [[40, 14], [40, 0], [40, -14]];
+base_buttons = [[42, 14], [42, 0], [42, -14]];
 
-body_step = 2;  // 輪切りの間隔。表の値の間は曲線(Catmull-Rom)でつなぐ
+// ---------------- 曲面をつくる道具 ----------------
 
 function cr(p0, p1, p2, p3, t) =
     0.5 * (2 * p1 + (p2 - p0) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t
            + (3 * p1 - p0 - 3 * p2 + p3) * t * t * t);
 
-function body_at(z, col) =
+// 表の値の間を曲線(Catmull-Rom)でつないで、高さ z の [後ろ, 前, 右, 左] を返す
+function body_at(z) =
     let (n = len(body),
          i = min(n - 2, max([for (k = [0 : n - 1]) if (body[k][0] <= z) k])),
-         t = (z - body[i][0]) / (body[i + 1][0] - body[i][0]))
-    cr(body[max(i - 1, 0)][col], body[i][col], body[i + 1][col], body[min(i + 2, n - 1)][col], t);
+         t = (z - body[i][0]) / (body[i + 1][0] - body[i][0]),
+         a = body[max(i - 1, 0)], b = body[i], c = body[i + 1], d = body[min(i + 2, n - 1)])
+    [for (col = [1 : 4]) cr(a[col], b[col], c[col], d[col], t)];
 
-function front_x(z) = body_at(z, 2);
+function front_x(z) = body_at(z)[1];
+function center_y(z) = let (r = body_at(z)) (r[2] + r[3]) / 2;
 
-body_zs = concat([for (z = [body[0][0] : body_step : body[len(body) - 1][0] - 0.01]) z],
-                 [body[len(body) - 1][0]]);
+// 超楕円の1点
+function se(x0, x1, y0, y1, e, t) =
+    [(x0 + x1) / 2 + (x1 - x0) / 2 * sign(cos(t)) * pow(abs(cos(t)), 2 / e),
+     (y0 + y1) / 2 + (y1 - y0) / 2 * sign(sin(t)) * pow(abs(sin(t)), 2 / e)];
 
-module rrect(x0, x1, y0, y1, r, h)
-    hull()
-        for (x = [x0 + r, x1 - r], y = [y0 + r, y1 - r])
-            translate([x, y, 0]) cylinder(r = r, h = h);
+function ring(x0, x1, y0, y1, e, z) =
+    [for (k = [0 : ring_n - 1]) let (p = se(x0, x1, y0, y1, e, 360 * k / ring_n)) [p[0], p[1], z]];
 
-module slice(b)
-    translate([0, 0, b[0]])
-        hull()
-            for (s = [-1, 1]) {
-                translate([b[1] + body_rb, s * (b[3] - body_rb), 0]) cylinder(r = body_rb, h = 0.5);
-                translate([b[2] - body_rf, s * (b[3] - body_rf), 0]) cylinder(r = body_rf, h = 0.5);
-            }
+function smooth01(t) = let (c = max(0, min(1, t))) c * c * (3 - 2 * c);
 
-module head_frame()
-    translate(stick_pos) rotate([0, -head_tilt, 0]) children();
+// 天面の傾き: 高さ tilt_from から上を、スティック位置を軸に前が上がるようにずらす
+function tilt_pt(p) =
+    let (s = smooth01((p[2] - tilt_from) / (top_z - top_r - tilt_from)))
+    [p[0], p[1], p[2] + tan(head_tilt) * (p[0] - stick_xy[0]) * s];
 
-module head()
-    head_frame()
-        translate([0, 0, -plate_t])
-            rrect(plate_u[0], plate_u[1], plate_v[0], plate_v[1], plate_r, plate_t);
+// 輪のリストを1つの閉じた立体にする(上下のふたは中心から扇形に張る)
+module loft(rings) {
+    m = len(rings);
+    n = len(rings[0]);
+    pts = [for (r = rings) for (p = r) p];
+    bc =[sum_x(rings[0]) / n, sum_y(rings[0]) / n, avg_z(rings[0])];
+    tc = [sum_x(rings[m - 1]) / n, sum_y(rings[m - 1]) / n, avg_z(rings[m - 1])];
+    B = m * n;
+    T = m * n + 1;
+    sides = [for (i = [0 : m - 2], j = [0 : n - 1])
+                let (a = i * n + j, b = (i + 1) * n + j,
+                     c = (i + 1) * n + (j + 1) % n, d = i * n + (j + 1) % n)
+                each [[a, b, c], [a, c, d]]];
+    caps = concat([for (j = [0 : n - 1]) [B, j, (j + 1) % n]],
+                  [for (j = [0 : n - 1]) [T, (m - 1) * n + (j + 1) % n, (m - 1) * n + j]]);
+    polyhedron(points = concat(pts, [bc, tc]), faces = concat(sides, caps), convexity = 6);
+}
+
+function sum_x(r) = [for (p = r) 1] * [for (p = r) p[0]];
+function sum_y(r) = [for (p = r) 1] * [for (p = r) p[1]];
+function avg_z(r) = ([for (p = r) 1] * [for (p = r) p[2]]) / len(r);
+
+// ---------------- 形 ----------------
+
+function base_rings() =
+    let (zs = concat([0, 1.2, base_h - base_rf],
+                     [for (k = [1 : 6]) let (a = 90 * k / 6) base_h - base_rf + base_rf * sin(a)]),
+         ins = concat([1.2, 0, 0],
+                      [for (k = [1 : 6]) let (a = 90 * k / 6) base_rf * (1 - cos(a))]))
+    [for (i = [0 : len(zs) - 1])
+        [for (p = ring(base_x[0] + ins[i], base_x[1] - ins[i], base_y[0] + ins[i], base_y[1] - ins[i],
+                       base_se, zs[i]))
+            [p[0], p[1], p[2] * base_thin(p[0])]]];
+
+function body_rings() =
+    let (z0 = body[0][0],
+         z1 = body[len(body) - 1][0],
+         zs = concat([for (z = [z0 : body_step : z1 - 0.01]) z], [z1]),
+         straight = [for (z = zs) let (r = body_at(z)) ring(r[0], r[1], r[2], r[3], body_se(z), z)],
+         r1 = body_at(z1),
+         crown = [for (k = [1 : 6])
+                    let (a = 90 * k / 6, ins = top_r * (1 - cos(a)))
+                    ring(r1[0] + ins, r1[1] - ins, r1[2] + ins, r1[3] - ins, body_se(z1), z1 + top_r * sin(a))])
+    [for (r = concat(straight, crown)) [for (p = r) tilt_pt(p)]];
+
+module head_frame() translate(stick_pos) rotate([0, -head_tilt, 0]) children();
 
 // 天面の (u, v) に子要素を置く。子要素の +Z が天面の外向き
 module on_head(u, v) head_frame() translate([u, v, 0]) children();
 
 // 前面の高さ z に子要素を置く。子要素の +Z が前向き、子要素の X が縦方向
-module on_front(z, y = 0) translate([front_x(z), y, z]) rotate([0, 90, 0]) children();
+module on_front(z) translate([front_x(z), center_y(z), z]) rotate([0, 90, 0]) children();
 
-module on_base(b) translate([b[0], b[1], base_t]) children();
+module on_base(b) translate([b[0], b[1], base_h]) children();
 
-module base()
-    hull() {
-        rrect(base_x0, base_x1, base_y0, base_y1, base_r, base_t);
-        translate([base_tip + 12, (base_y0 + base_y1) / 2, 0])
-            scale([12, 28, 1]) cylinder(r = 1, h = 3);
-    }
-
-module slice_at(z) slice([z, body_at(z, 1), body_at(z, 2), body_at(z, 3)]);
-
-module grip() {
-    for (i = [0 : len(body_zs) - 2]) hull() { slice_at(body_zs[i]); slice_at(body_zs[i + 1]); }
-    hull() { slice(body[len(body) - 1]); head(); }
-}
-
+module base() loft(base_rings());
+module grip() loft(body_rings());
 module body() { base(); grip(); }
+
+base_y0 = base_y[0];
