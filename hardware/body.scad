@@ -44,11 +44,14 @@ body_step = 2;      // 輪切りの間隔
 top_r     = 5;      // 天面の縁の丸み
 
 // ---- 天面(親指を置く平らな面) ----
-head_tilt = 25;                                  // 前が高くなる傾き(度)
+head_tilt = 50;                                  // 天面の傾き(度)。前が高く、手前を向く
 stick_xy  = [12.4, -14.5];                       // スティックの中心
-top_z     = body[len(body) - 1][0] + top_r;      // スティック位置での天面の高さ
-tilt_from = 66;                                  // ここから上を天面の傾きに合わせて傾ける
-plate_from = 80;                                 // ここから上で、断面を天面の扇の外形へ変えていく
+neck_top  = 72;                                  // 首の上端。ここから上は傾いた天面の板へつなぐ
+plate_t   = 7;                                   // 天面の板の厚み(縁の丸みを含む)
+plate_from = 50;                                 // ここから上で、首の断面を天面の外形(真上から見た形)へ変えていく
+bridge_n  = 14;                                  // 首の上端から天面の板の下面までをつなぐ輪の数
+// 天面の板の一番後ろの下面が、首の上端より 6mm 上にくるように天面の高さを決める
+top_z     = neck_top + 6 + plate_t * cos(head_tilt) + 46 * sin(head_tilt);
 stick_pos = [stick_xy[0], stick_xy[1], top_z];
 
 // 天面の上の座標 (u, v): u は前方向、v は左方向、原点はスティックの中心。
@@ -111,7 +114,10 @@ function body_at(z) =
          a = body[max(i - 1, 0)], b = body[i], c = body[i + 1], d = body[min(i + 2, n - 1)])
     [for (col = [1 : 4]) cr(a[col], b[col], c[col], d[col], t)];
 
-function front_x(z) = body_at(z)[1];
+function front_x(z) =
+    z <= neck_top ? body_at(z)[1]
+    : let (t = smooth01((z - neck_top) / (plate_pt(40, 0, -plate_t)[2] - neck_top)))
+      body_at(neck_top)[1] * (1 - t) + plate_pt(40, 0, -plate_t)[0] * t;
 
 // 天面の外形の半径(角度 a、度)。plate_knots の間を曲線でつなぎ、一周でつながるようにする
 function kang(i) = let (n = len(plate_knots)) plate_knots[(i % n + n) % n][0] + 360 * floor(i / n);
@@ -123,9 +129,19 @@ function plate_R(a) =
          t = (aa - kang(i)) / (kang(i + 1) - kang(i)))
     cr(kval(i - 1), kval(i), kval(i + 1), kval(i + 2), t);
 
-function plate_ring(ins, z) =
+// 天面の板の上の点 (u, v, w) を本体の座標へ。w は天面からの高さ(下向きが負)
+function plate_pt(u, v, w) =
+    [stick_xy[0] + u * cos(head_tilt) - w * sin(head_tilt), stick_xy[1] + v, top_z + u * sin(head_tilt) + w * cos(head_tilt)];
+
+// 天面の板の輪(傾いた面の上、天面から w の深さ、外形から ins だけ内側)
+function plate_ring(ins, w) =
     [for (k = [0 : ring_n - 1]) let (a = 360 * k / ring_n, r = plate_R(a) - ins)
-        [stick_xy[0] + r * cos(a), stick_xy[1] + r * sin(a), z]];
+        plate_pt(r * cos(a), r * sin(a), w)];
+
+// 真上から見た天面の外形を、高さ z の水平な輪にしたもの(首を天面の形へ寄せる目標)
+function plate_shadow(z) =
+    [for (k = [0 : ring_n - 1]) let (a = 360 * k / ring_n, r = plate_R(a))
+        [stick_xy[0] + r * cos(a) * cos(head_tilt), stick_xy[1] + r * sin(a), z]];
 
 function mix(p, q, w) = p * (1 - w) + q * w;
 function center_y(z) = let (r = body_at(z)) (r[2] + r[3]) / 2;
@@ -139,11 +155,6 @@ function ring(x0, x1, y0, y1, e, z) =
     [for (k = [0 : ring_n - 1]) let (p = se(x0, x1, y0, y1, e, 360 * k / ring_n)) [p[0], p[1], z]];
 
 function smooth01(t) = let (c = max(0, min(1, t))) c * c * (3 - 2 * c);
-
-// 天面の傾き: 高さ tilt_from から上を、スティック位置を軸に前が上がるようにずらす
-function tilt_pt(p) =
-    let (s = smooth01((p[2] - tilt_from) / (top_z - top_r - tilt_from)))
-    [p[0], p[1], p[2] + tan(head_tilt) * (p[0] - stick_xy[0]) * s];
 
 // 輪のリストを1つの閉じた立体にする(上下のふたは中心から扇形に張る)
 module loft(rings) {
@@ -181,16 +192,21 @@ function base_rings() =
 
 function body_rings() =
     let (z0 = body[0][0],
-         z1 = body[len(body) - 1][0],
-         zs = concat([for (z = [z0 : body_step : z1 - 0.01]) z], [z1]),
-         // 首の断面(角の丸い四角)を、上へ行くほど天面の扇の外形へ変えていく
-         straight = [for (z = zs) let (r = body_at(z), w = smooth01((z - plate_from) / (z1 - plate_from)),
-                                       a = ring(r[0], r[1], r[2], r[3], body_se(z), z), b = plate_ring(0, z))
-                        [for (k = [0 : ring_n - 1]) mix(a[k], b[k], w)]],
+         zs = concat([for (z = [z0 : body_step : neck_top - 0.01]) z], [neck_top]),
+         // 首の断面(角の丸い四角)を、上へ行くほど天面の外形へ変えていく
+         neck = [for (z = zs) let (r = body_at(z), w = 0.85 * smooth01((z - plate_from) / (neck_top - plate_from)),
+                                   a = ring(r[0], r[1], r[2], r[3], body_se(z), z), b = plate_shadow(z))
+                    [for (k = [0 : ring_n - 1]) mix(a[k], b[k], w)]],
+         last = neck[len(neck) - 1],
+         under = plate_ring(0, -plate_t),
+         // 首の上端から、傾いた天面の板の下面までをなめらかにつなぐ
+         bridge = [for (j = [1 : bridge_n - 1]) let (t = smooth01(j / bridge_n))
+                    [for (k = [0 : ring_n - 1]) mix(last[k], under[k], t)]],
+         side = [under, plate_ring(0, -top_r)],
          crown = [for (k = [1 : 6])
                     let (a = 90 * k / 6, ins = top_r * (1 - cos(a)))
-                    plate_ring(ins, z1 + top_r * sin(a))])
-    [for (r = concat(straight, crown)) [for (p = r) tilt_pt(p)]];
+                    plate_ring(ins, -top_r + top_r * sin(a))])
+    concat(neck, bridge, side, crown);
 
 module head_frame() translate(stick_pos) rotate([0, -head_tilt, 0]) children();
 
