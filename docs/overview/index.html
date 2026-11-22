@@ -474,11 +474,29 @@ section[role="tabpanel"]{min-width:0}
     <li>天面の幅 78mm は、縮尺の決め方の都合で ±8mm 程度ずれている可能性がある</li>
   </ul>
 
+  <h2>試作6号:測った値から作り直した形</h2>
+  <p>天面の傾きは 29°(既製品と同じ)と 35° の2種類。外形は <span class="mono">hardware/body2.scad</span>、印刷用は <span class="mono">hardware/stl/proto_v6_29deg.stl</span> と <span class="mono">proto_v6_35deg.stl</span>。</p>
+  <div class="tablebox"><table>
+    <thead><tr><th>部位</th><th>何を使ったか</th></tr></thead>
+    <tbody>
+      <tr><td>横から見た輪郭</td><td>IMG_1096 で打った点をそのまま使った。35° の版は、天面の線だけを前の角を軸に傾け直した</td></tr>
+      <tr><td>天面の外形</td><td>IMG_1092 で打った点を、測った CSV から自動で読み込んだ(手で数字を写していない)</td></tr>
+      <tr><td>天面のキーの位置</td><td>同じく IMG_1092 で測った位置</td></tr>
+      <tr><td>前面の3つのボタン</td><td>IMG_1096 で測った高さ(中心 57・73・88mm)</td></tr>
+      <tr><td>首の太さ・土台の張り出し</td><td>IMG_1092 から遠近を補正して見積もった値(首の幅 約44mm)。土台の手のひら側の端は、写真からの見積もり(約70mm)だと全体の幅が 98mm になり商品ページの 90mm を超えたため、90mm になる位置(スティックから 62mm)にした</td></tr>
+      <tr><td>まだ入れていないもの</td><td>土台の手を置く所のへこみ・手のひら側のへこみ(左右の形が測れていない)、薬指のボタン、床ボタン、USB-C。ESC は仮の位置</td></tr>
+    </tbody>
+  </table></div>
+  <div class="shots">
+    <figure><img src="img/v6_29_side.png" alt="試作6号(29度)を手のひら側の横から見た図" width="900" height="800"><figcaption>試作6号 29°(手のひら側から。左が前)</figcaption></figure>
+    <figure><img src="img/v6_35_side.png" alt="試作6号(35度)を手のひら側の横から見た図" width="900" height="800"><figcaption>試作6号 35°</figcaption></figure>
+  </div>
+
   <h2>次にやること</h2>
   <ol>
-    <li>横の形を、この輪郭(天面29°、前面の下の空き、手首側へ倒れる胴体、手首側へ伸びる土台)に合わせて作り直す</li>
-    <li>天面のボタンを、測った角度と距離に合わせる</li>
-    <li>そのうえで、変える部分(ESC、薬指のボタン、床ボタン、USB-C)だけを足す。どこを変えたかはこの表に追記する</li>
+    <li>29° と 35° のどちらか(または両方)を刷って、既製品と持ち比べる</li>
+    <li>真正面・真後ろの写真で左右方向の形を測り、手を置く所のへこみを入れる</li>
+    <li>そのうえで、変える部分(薬指のボタン、床ボタン、USB-C)を足す。どこを変えたかはこの表に追記する</li>
   </ol>
 </section>
 
