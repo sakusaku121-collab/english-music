@@ -23,18 +23,19 @@ function base_thin(x) = lookup(x, [[-73, 0.35], [-40, 1]]);
 
 // ---- 胴体: [高さz, 後ろ端x, 前端x, 右端y, 左端y] ----
 // 高さ 20〜30 の前端が下がっているところが、薬指・小指の入るくぼみ。
-// 高さ 60 あたりが一番細いくびれで、そこから天面へ向かって広がる。
+// 握る部分(高さ 40〜80)は奥行き 約63・幅 約41 の細い首にして、手の小さい人でも握れるようにする。
+// 天面(親指の扇形)は大きさを変えず、首から天面へ向かって広げる。
 body = [
-    [  8, -62, 36, -32, 38  ],
-    [ 14, -57, 31, -27, 32  ],
-    [ 20, -54, 29, -25, 28  ],
-    [ 30, -52, 30, -24, 26  ],
-    [ 38, -50, 46, -24, 26  ],
-    [ 46, -48, 52, -24, 26  ],
-    [ 60, -45, 52, -24, 25  ],
-    [ 75, -41, 52, -26, 27  ],
-    [ 88, -38, 52, -31, 30  ],
-    [ 98, -35, 52, -38, 33  ],
+    [  8, -50, 36, -30, 36  ],
+    [ 14, -38, 30, -25, 29  ],
+    [ 20, -30, 27, -22, 25  ],
+    [ 30, -24, 27, -21, 22  ],
+    [ 38, -21, 40, -21, 21  ],
+    [ 46, -19, 46, -21, 20.5],
+    [ 60, -17, 46, -21, 20  ],
+    [ 75, -18, 47, -22, 21  ],
+    [ 88, -24, 49, -28, 25  ],
+    [ 98, -31, 51, -37, 31  ],
     [106, -34, 52, -42, 33.5],
     [108.7, -34, 52, -42, 33.5],
 ];
@@ -47,22 +48,45 @@ head_tilt = 9;                                   // 前が高くなる傾き(度
 stick_xy  = [12.4, -14.5];                       // スティックの中心
 top_z     = body[len(body) - 1][0] + top_r;      // スティック位置での天面の高さ
 tilt_from = 92;                                  // ここから上を天面の傾きに合わせて傾ける
+plate_from = 80;                                 // ここから上で、断面を天面の扇の外形へ変えていく
 stick_pos = [stick_xy[0], stick_xy[1], top_z];
 
-// 天面の上の座標 (u, v): u は前方向、v は左方向、原点はスティックの中心
-// 親指を中心にした2重の扇形(内側の半径 約22mm、外側 約37mm)
+// 天面の上の座標 (u, v): u は前方向、v は左方向、原点はスティックの中心。
+// 角度はスティックから見た向き(0° が前、90° が左、180° が手前)。
+//
+// 扇形の考え方:
+//   親指はスティックに置いたまま、付け根の方へ曲げてボタンを押し、スティックに戻る。
+//   付け根の方へ曲げるのは楽で、反対側(右前)へ伸ばすのはつらい。
+//   そこで、スティックを中心に、親指の付け根の向き thumb_dir を真ん中にして
+//   ±90° の範囲にだけボタンを並べる。
+//   - 内側の列(半径 ring_in): 5個を 45° おきに。親指を少し曲げるだけで届く
+//   - 外側の列(半径 ring_out): 扇の両端に2個ずつ。真ん中は親指の付け根の真上で届かないので空ける
+//   - ESC は扇の外(右前、指を伸ばす側)に置き、長押しでだけ送る
+thumb_dir = 115;   // 親指の付け根の向き(左やや手前)
+ring_in   = 22.3;
+ring_out  = 37.5;
+
+function polar(r, a) = [r * cos(a), r * sin(a)];
+
 button_layout = [
-    [ 21.0,  31.5],   // 3
-    [ 32.5,  20.5],   // 4
-    [ 21.0,  10.0],   // Tab
-    [  7.0,  21.0],   // F
-    [ -8.5,  20.5],   // Q
-    [-21.0,   7.5],   // E
-    [-20.5,  -9.0],   // X
-    [-36.5,   4.0],   // 1
-    [-36.0, -11.5],   // 2
+    polar(ring_out, thumb_dir - 59),   // 3
+    polar(ring_out, thumb_dir - 83),   // 4
+    polar(ring_in,  thumb_dir - 90),   // Tab
+    polar(ring_in,  thumb_dir - 45),   // F
+    polar(ring_in,  thumb_dir),        // Q
+    polar(ring_in,  thumb_dir + 45),   // E
+    polar(ring_in,  thumb_dir + 90),   // X
+    polar(ring_out, thumb_dir + 59),   // 1
+    polar(ring_out, thumb_dir + 83),   // 2
 ];
-esc_pos = [24, -15];   // ボタンのない右前。誤爆対策にファームウェアで長押しにしている
+esc_pos = polar(28.5, -32);
+
+// 天面の外形: スティックから見た向きごとの半径。扇の範囲は外側の列まで広げ、
+// 親指の付け根の真上(thumb_dir)は少しへこませ、指を伸ばす右側はスティックの周りに詰める
+plate_knots = [
+    [-180, 46], [-150, 44], [-120, 31], [-80, 25], [-40, 35],
+    [ 0, 38], [ 30, 46], [ 60, 47], [ 90, 38], [115, 34], [140, 37], [165, 45],
+];
 
 // 前面のボタンの高さ(下から): G, CTRL, SHIFT, SPACE
 side_button_z = [49, 63, 77, 91];
@@ -85,6 +109,22 @@ function body_at(z) =
     [for (col = [1 : 4]) cr(a[col], b[col], c[col], d[col], t)];
 
 function front_x(z) = body_at(z)[1];
+
+// 天面の外形の半径(角度 a、度)。plate_knots の間を曲線でつなぎ、一周でつながるようにする
+function kang(i) = let (n = len(plate_knots)) plate_knots[(i % n + n) % n][0] + 360 * floor(i / n);
+function kval(i) = let (n = len(plate_knots)) plate_knots[(i % n + n) % n][1];
+function plate_R(a) =
+    let (n = len(plate_knots), a0 = plate_knots[0][0],
+         aa = a0 + ((a - a0) % 360 + 360) % 360,
+         i = max([for (j = [0 : n - 1]) if (plate_knots[j][0] <= aa) j]),
+         t = (aa - kang(i)) / (kang(i + 1) - kang(i)))
+    cr(kval(i - 1), kval(i), kval(i + 1), kval(i + 2), t);
+
+function plate_ring(ins, z) =
+    [for (k = [0 : ring_n - 1]) let (a = 360 * k / ring_n, r = plate_R(a) - ins)
+        [stick_xy[0] + r * cos(a), stick_xy[1] + r * sin(a), z]];
+
+function mix(p, q, w) = p * (1 - w) + q * w;
 function center_y(z) = let (r = body_at(z)) (r[2] + r[3]) / 2;
 
 // 超楕円の1点
@@ -140,11 +180,13 @@ function body_rings() =
     let (z0 = body[0][0],
          z1 = body[len(body) - 1][0],
          zs = concat([for (z = [z0 : body_step : z1 - 0.01]) z], [z1]),
-         straight = [for (z = zs) let (r = body_at(z)) ring(r[0], r[1], r[2], r[3], body_se(z), z)],
-         r1 = body_at(z1),
+         // 首の断面(角の丸い四角)を、上へ行くほど天面の扇の外形へ変えていく
+         straight = [for (z = zs) let (r = body_at(z), w = smooth01((z - plate_from) / (z1 - plate_from)),
+                                       a = ring(r[0], r[1], r[2], r[3], body_se(z), z), b = plate_ring(0, z))
+                        [for (k = [0 : ring_n - 1]) mix(a[k], b[k], w)]],
          crown = [for (k = [1 : 6])
                     let (a = 90 * k / 6, ins = top_r * (1 - cos(a)))
-                    ring(r1[0] + ins, r1[1] - ins, r1[2] + ins, r1[3] - ins, body_se(z1), z1 + top_r * sin(a))])
+                    plate_ring(ins, z1 + top_r * sin(a))])
     [for (r = concat(straight, crown)) [for (p = r) tilt_pt(p)]];
 
 module head_frame() translate(stick_pos) rotate([0, -head_tilt, 0]) children();

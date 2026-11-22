@@ -17,7 +17,7 @@ side_btn_h   = 9.5;
 difference() {
     body();
     on_head(0, 0)
-        translate([0, 0, -30]) cylinder(d = stick_hole_d, h = 40);
+        translate([0, 0, -20]) cylinder(d = stick_hole_d, h = 30);
     for (p = concat(button_layout, [esc_pos]))
         on_head(p[0], p[1]) translate([0, 0, -20]) cylinder(d = btn_hole, h = 30);
     for (z = side_button_z)
