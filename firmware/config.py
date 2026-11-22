@@ -82,7 +82,7 @@ PROFILES = [
             "top_esc": Keycode.ESCAPE,
             "base_f1": Keycode.F1,
             "base_view": Keycode.N,  # Apex 初期設定の「武器を調べる」
-            # base_rev はゲーム側のキー設定を確認してから割り当てる(未割当の間は押しても何も起きない)
+            "base_rev": Keycode.L,  # デスボ・蘇生(自分のゲーム内設定)
         },
         "stick": {
             "deadzone": 0.30,
@@ -122,6 +122,7 @@ PROFILES = [
             "top_esc": Keycode.ESCAPE,
             "base_f1": Keycode.F1,
             "base_view": Keycode.N,
+            "base_rev": Keycode.L,
         },
         "stick": {
             "deadzone": 0.30,
