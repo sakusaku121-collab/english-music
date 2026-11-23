@@ -56,7 +56,33 @@ base_profile = [[-21.8, 0], [-21.8, rim_front], [-125.3, rim_back], [-125.3, 0]]
 
 module neck_foot2d() rounded_box2d(-125, -46, neck_y[0], neck_y[1], 12);
 
-module base() union() {
+// 手のひら側の盆地: 左手を置いたとき小指の腹の側面が収まる所。手のひら側の土台の上面が、
+// 前後方向に山と山の間 80mm、真ん中(山から 40mm)で最大 3mm 下がる(定規を渡して測った値、IMG_1122)。
+// 山の前後の位置は土台の前後の真ん中とした(測っていない)。首の側では、盛り上がりの裾の外から深くなる。
+basin_len = 80;
+basin_depth = 3;
+basin_center_x = (-21.8 + -125.3) / 2;
+basin_y = [neck_y[1] + collar_flare, neck_y[1] + collar_flare + 8];   // ここから外側で深さいっぱい
+function rim_top(x) = rim_front + (rim_back - rim_front) * (-21.8 - x) / (125.3 - 21.8);
+function basin_dip(x) = abs(x - basin_center_x) >= basin_len / 2 ? 0
+    : basin_depth * (1 + cos(180 * (x - basin_center_x) / (basin_len / 2))) / 2;
+
+module basin_cut() {
+    n = 40;
+    step = basin_len / n;
+    for (i = [0 : n - 1]) {
+        x0 = basin_center_x - basin_len / 2 + i * step;
+        xm = x0 + step / 2;
+        hull() {
+            translate([x0, basin_y[0], rim_top(xm)]) cube([step + 0.01, 0.01, 30]);
+            translate([x0, basin_y[1], rim_top(xm) - basin_dip(xm)]) cube([step + 0.01, 40, 30]);
+        }
+    }
+}
+
+module base() difference() { base_solid(); basin_cut(); }
+
+module base_solid() union() {
     // 縁の板
     intersection() {
         linear_extrude(40) rounded_box2d(-130, -18, base_y[0], base_y[1], base_r);
