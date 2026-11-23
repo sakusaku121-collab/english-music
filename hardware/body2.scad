@@ -23,7 +23,7 @@ side_profile = [
     [-90.6, min(54.2, plate_z(plate_back_x) - 6)],
     [-98.4, 36.6], [-101.3, 30.8],               // 胴体の後ろ(手首側へ約24°倒れる)
     [-108.1, 23.0], [-115.9, 16.2], [-124.7, 8.4], [-125.3, 1.0],   // 土台の上面(手首側へ薄くなる)
-    [-125.3, 0], [-21.8, 0], [-21.8, 1.6], [-22.8, 19.7],          // 土台の底と前の端
+    [-125.3, 0], [-21.8, 0], [-21.8, 10], [-36, 10.5], [-43, 14],   // 土台の底と前の端、首の前へ盛り上がる所
     [-45.8, 21.0], [-47.3, 32.7], [-44.2, 44.4],                    // 首の前
     [-38.0, 52.2], [-28.2, 55.1], [-16.6, 53.2], [-6.8, 47.3],      // 頭の下(指が入る空き)
     [0.0, 40.5],                                                    // 前面の下の角
@@ -44,13 +44,33 @@ module rounded_box2d(x0, x1, y0, y1, r) offset(r = r) offset(delta = -r) transla
 
 module side_solid() rotate([90, 0, 0]) translate([0, 0, -150]) linear_extrude(300) offset(r = 2) offset(delta = -2) polygon(side_profile);
 
-// 土台を横から見た形(前の端から手首側の先まで。上面は首の下でほぼ平らで、手首側へ薄くなる)
-base_profile = [[-21.8, 0], [-22.8, 19.7], [-60, 20.0], [-95, 21.5], [-108.1, 23.0], [-115.9, 16.2],
-                [-124.7, 8.4], [-125.3, 0]];
+// 土台は、薄い縁の板と、首の付け根の周りの盛り上がりでできている。
+// 寸法は既製品を定規で測った値(2026-11-23)。測った場所はまとめページの「既製品の分析」タブ。
+// IMG_1096 で「土台の上面」として測った約20mm は、この盛り上がりの上の継ぎ目の高さだった。
+rim_front = 10;    // 1: 前の端の縁の厚さ
+rim_back = 9;      // 2: 手首側の先の縁の厚さ
+collar_top = 21;   // 3・4: 継ぎ目の高さ。手のひら側も指側も 21mm
+collar_flare = 10; // 盛り上がりの裾が首から広がる幅。IMG_1097 から見積もった値で、測ってはいない
 
-module base() intersection() {
-    linear_extrude(40) rounded_box2d(-130, -18, base_y[0], base_y[1], base_r);
-    rotate([90, 0, 0]) translate([0, 0, -150]) linear_extrude(300) offset(r = 2) offset(delta = -2) polygon(base_profile);
+base_profile = [[-21.8, 0], [-21.8, rim_front], [-125.3, rim_back], [-125.3, 0]];
+
+module neck_foot2d() rounded_box2d(-125, -46, neck_y[0], neck_y[1], 12);
+
+module base() union() {
+    // 縁の板
+    intersection() {
+        linear_extrude(40) rounded_box2d(-130, -18, base_y[0], base_y[1], base_r);
+        rotate([90, 0, 0]) translate([0, 0, -150]) linear_extrude(300) offset(r = 2) offset(delta = -2) polygon(base_profile);
+    }
+    // 首の付け根の盛り上がり。裾は縁の上面から、継ぎ目の高さで首の太さになる
+    intersection() {
+        hull() {
+            translate([0, 0, rim_back - 0.5]) linear_extrude(0.5) offset(r = collar_flare) neck_foot2d();
+            translate([0, 0, collar_top]) linear_extrude(0.5) neck_foot2d();
+        }
+        side_solid();
+        linear_extrude(40) rounded_box2d(-130, -18, base_y[0], base_y[1], base_r);
+    }
 }
 
 module footprints() {
