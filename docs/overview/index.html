@@ -71,7 +71,7 @@ td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
 .key.dark{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .shots{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
 figure{margin:0}
-figure img{display:block;width:100%;border-radius:10px;background:#1D1F21}
+figure img{display:block;width:100%;height:auto;border-radius:10px;background:#1D1F21}
 figcaption{font-size:13px;color:var(--muted);margin-top:6px}
 .specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:12px}
 .spec{border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:var(--surface)}
@@ -97,6 +97,15 @@ section[role="tabpanel"]{min-width:0}
 .diagram .prod{fill:none;stroke:#D33A2C;stroke-width:2.5}
 .diagram .mine{fill:none;stroke:var(--muted);stroke-width:1.5;stroke-dasharray:5 4}
 .foot{margin-top:40px;font-size:12px;color:var(--muted)}
+.anno{position:relative}
+.anno svg{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
+.anno .m{stroke:#D33A2C;stroke-width:5;fill:none}
+.anno .s{stroke:#FFD23F;stroke-width:5;stroke-dasharray:14 9;fill:none}
+.anno .tk{stroke:#D33A2C;stroke-width:4}
+.anno circle{fill:#fff;stroke:#D33A2C;stroke-width:4}
+.anno .n{font-family:var(--body);font-weight:700;fill:#D33A2C;font-size:32px;text-anchor:middle;dominant-baseline:central}
+.anno .bg{fill:rgba(0,0,0,.72)}
+.anno .lab{font-family:var(--body);font-weight:700;fill:#fff;font-size:24px}
 </style>
 
 <div class="wrap">
@@ -494,11 +503,66 @@ section[role="tabpanel"]{min-width:0}
     <figure><img src="img/v6_35_iso.png" alt="試作6号(35度)を斜め上から見た図" width="900" height="800"><figcaption>35° 斜め上から</figcaption></figure>
   </div>
 
+  <h2>試作6号(29°)を刷って既製品と並べた結果</h2>
+  <p>2026-11-23 に 29° の版を刷った(黒の PLA Basic、ライトニング 10%、ツリーサポート、約70g・2時間48分)。全体の輪郭・角度・キーの位置は近いが、次の4つがずれている。写真は <span class="mono">reference/proto_v6_compare/</span> に保存した。</p>
+  <div class="tablebox"><table>
+    <thead><tr><th>#</th><th>ずれ</th><th>見える写真</th><th>原因</th></tr></thead>
+    <tbody>
+      <tr><td>A</td><td><b>土台が厚い。</b>既製品は縁が薄い板で、首の付け根の周りだけが盛り上がる。試作は前から後ろまで約20mmの平らな板</td><td>手のひら側の低い位置から</td><td>IMG_1096 で首の付け根の盛り上がりの高さを「土台の上面」として測り、全体に伸ばした。土台のアップ(IMG_1097)を寸法に使っていなかった</td></tr>
+      <tr><td>B</td><td><b>頭の下の胴体が太い。</b>既製品は天面の下で左右からくびれて首になる。試作は天面の幅のまま下へ落ち、頭の側面に段ができている</td><td>真上・正面・指側</td><td>天面の外形をまっすぐ下へ伸ばした立体を使っているため。左右の断面はまだ測っていない</td></tr>
+      <tr><td>C</td><td><b>天面の縁がカクカク。</b>既製品は 3・F・Q の側の縁が内側にえぐれた曲線</td><td>真上</td><td>天面の外形の点が少なく、直線でつないでいる</td></tr>
+      <tr><td>D</td><td><b>正面の上の縁。</b>既製品は正面から見ると上の縁が少し凹んだ鞍の形。試作は平ら</td><td>正面</td><td>横と上の写真だけでは分からない形</td></tr>
+    </tbody>
+  </table></div>
+  <div class="shots">
+    <figure><img src="img/cmp_top.jpg" alt="既製品と試作6号を真上から並べた写真" width="756" height="1008" loading="lazy"><figcaption>真上(左が既製品)。B・C</figcaption></figure>
+    <figure><img src="img/cmp_palm.jpg" alt="既製品と試作6号を手のひら側の低い位置から並べた写真" width="756" height="1008" loading="lazy"><figcaption>手のひら側の低い位置から。A</figcaption></figure>
+    <figure><img src="img/cmp_finger.jpg" alt="既製品と試作6号を指側から並べた写真" width="756" height="1008" loading="lazy"><figcaption>指側から(右が前)。A・B</figcaption></figure>
+    <figure><img src="img/cmp_front.jpg" alt="既製品と試作6号を正面から並べた写真" width="756" height="1008" loading="lazy"><figcaption>正面(3つのボタンの面)。B・D</figcaption></figure>
+  </div>
+
+  <h2>定規で測ってほしい所(土台)</h2>
+  <p>土台は場所によって厚さが違うので、下の写真の<b>赤い線の位置</b>で測る。どれも、定規を机に垂直に立てて、机の面から線の上の端までの高さを読む。底のゴムも含めてよい。</p>
+  <ul>
+    <li><b>前</b>は3つのボタンがある面の側、<b>手首側</b>はその反対の端。</li>
+    <li>黄色の点線は、本体と土台の<b>継ぎ目</b>(細い溝)。</li>
+  </ul>
+  <div class="shots">
+    <figure><div class="anno"><img src="img/measure_palm.jpg" alt="既製品の土台を手のひら側から写した写真に、測る場所1・2・3を描いた図" width="756" height="1008"><svg viewBox="0 0 756 1008" aria-hidden="true">
+      <rect class="bg" x="8" y="20" width="250" height="40" rx="8"/><text class="lab" x="20" y="49">← 前(ボタンの面)</text>
+      <rect class="bg" x="560" y="20" width="186" height="40" rx="8"/><text class="lab" x="572" y="49">手首側 →</text>
+      <line class="tk" x1="40" y1="538" x2="100" y2="538"/><line class="tk" x1="40" y1="605" x2="100" y2="605"/><line class="m" x1="55" y1="538" x2="55" y2="605"/>
+      <circle cx="55" cy="660" r="24"/><text class="n" x="55" y="661">1</text>
+      <line class="tk" x1="700" y1="512" x2="752" y2="512"/><line class="tk" x1="700" y1="588" x2="752" y2="588"/><line class="m" x1="728" y1="512" x2="728" y2="588"/>
+      <circle cx="728" cy="640" r="24"/><text class="n" x="728" y="641">2</text>
+      <line class="s" x1="250" y1="471" x2="530" y2="457"/>
+      <line class="tk" x1="360" y1="466" x2="400" y2="466"/><line class="tk" x1="360" y1="605" x2="400" y2="605"/><line class="m" x1="380" y1="466" x2="380" y2="605"/>
+      <circle cx="380" cy="660" r="24"/><text class="n" x="380" y="661">3</text>
+    </svg></div><figcaption>手のひら側から(IMG_1097)。1 = 土台の<b>前の端</b>の縁の厚さ。2 = 土台の<b>手首側の先</b>の縁の厚さ。3 = 首の付け根の<b>継ぎ目の高さ</b>(手のひら側の真ん中)</figcaption></figure>
+    <figure><div class="anno"><img src="img/measure_finger.jpg" alt="既製品の土台を指側から写した写真に、測る場所4を描いた図" width="756" height="1008"><svg viewBox="0 0 756 1008" aria-hidden="true">
+      <rect class="bg" x="8" y="20" width="186" height="40" rx="8"/><text class="lab" x="20" y="49">← 手首側</text>
+      <rect class="bg" x="496" y="20" width="250" height="40" rx="8"/><text class="lab" x="508" y="49">前(ボタンの面) →</text>
+      <line class="s" x1="60" y1="628" x2="470" y2="640"/>
+      <line class="tk" x1="130" y1="630" x2="170" y2="630"/><line class="tk" x1="130" y1="800" x2="170" y2="800"/><line class="m" x1="150" y1="630" x2="150" y2="800"/>
+      <circle cx="150" cy="860" r="24"/><text class="n" x="150" y="861">4</text>
+    </svg></div><figcaption>指側から(IMG_1098)。4 = <b>指側</b>の継ぎ目の高さ(USB の差し込み口より手首側)。手のひら側(3)と高さが違うかを見る</figcaption></figure>
+  </div>
+  <div class="tablebox"><table>
+    <thead><tr><th>#</th><th>場所</th><th>測った値</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>土台の前の端の縁</td><td class="num">まだ</td></tr>
+      <tr><td>2</td><td>土台の手首側の先の縁</td><td class="num">まだ</td></tr>
+      <tr><td>3</td><td>継ぎ目の高さ(手のひら側)</td><td class="num">まだ</td></tr>
+      <tr><td>4</td><td>継ぎ目の高さ(指側)</td><td class="num">まだ</td></tr>
+    </tbody>
+  </table></div>
+
   <h2>次にやること</h2>
   <ol>
-    <li>29° と 35° のどちらか(または両方)を刷って、既製品と持ち比べる</li>
-    <li>真正面・真後ろの写真で左右方向の形を測り、手を置く所のへこみを入れる</li>
-    <li>そのうえで、変える部分(薬指のボタン、床ボタン、USB-C)を足す。どこを変えたかはこの表に追記する</li>
+    <li>上の 1〜4 を定規で測り、土台を作り直す(ずれ A)</li>
+    <li>真正面・真後ろの写真で左右方向の形を測り、首のくびれと天面の縁の曲線を入れる(ずれ B・C・D)</li>
+    <li>握った感想(29° の角度、指が頭の下に入るか)を聞いて、35° を刷るかを決める</li>
+    <li>そのうえで、変える部分(薬指のボタン、床ボタン、USB-C)を足す</li>
   </ol>
 </section>
 
