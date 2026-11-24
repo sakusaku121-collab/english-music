@@ -14,7 +14,7 @@
 // 出力する STL は、そのまま台に置く向き(横から見た形が台の上、幅が高さ)になっている。
 // =============================================================
 
-part = "lower";        // "lower"(土台と柱の下) / "upper"(柱の上と腕) / "both"(確認用に組んだ姿)
+part = "lower";        // "lower"(土台と柱の下) / "upper"(柱の上と腕) / "plate"(扇形の土台板) / "both"(確認用に組んだ姿)
                        // "one"(継ぎ目なしの一体。A1 mini に入るのは H が 175mm まで)
 
 H = 225;               // 全体の高さ。エレコム HS-HP06SUBK(高さ約200mm)が土台に当たらない高さ
@@ -30,7 +30,17 @@ r_foot = 16;           // 柱から土台へ曲がる所の内側の半径。外
                        // 大きくすると、机に付く所が前へ下がって、スタンドだけのときに後ろへ倒れる
 arm_sag = 3;           // 腕の真ん中のくぼみの深さ(バンドが収まる)
 arm_curl = 7;          // 腕の先の反り上がり(前に滑り落ちない)
-base_corner = 12;      // 土台の前の角の丸み(上から見て)
+base_corner = 2;       // 板の土台の前の角の丸み(上から見て)。土台板のくぼみに隠れるので小さく
+
+// 土台板: 元のモデルのように、柱の付け根から前へ向かって左右に広がる扇形。
+// 横から見た形を寝かせて刷る本体は幅(70mm)より広くできないので、土台板を別に寝かせて刷り、
+// くぼみに本体の土台をはめて接着する。上の面は段差なしでそろう。
+plate_floor = 1.6;     // くぼみの底の厚み
+plate_x0 = 18;         // 土台板の後ろの端(柱の後ろの面から)
+plate_x1 = 140;        // 土台板の前の端
+plate_half_back = 42;  // 後ろの端の幅の半分
+plate_half_front = 65; // 前の端の幅の半分
+plate_front_r = 16;    // 前の角の丸み
 edge = 2;              // 幅の面の縁の面取り(角ばらないよう大きめ)
 round_r = 2;           // 横から見た形の角の丸み
 
@@ -160,7 +170,42 @@ module upper() {
     }
 }
 
-if (part == "one") slab2d_extrude() profile();
+// 土台板を上から見た形(x 前、y 幅。本体の幅の真ん中が y = W/2)
+function plate_half(x) = plate_half_back + (plate_half_front - plate_half_back) * pow((x - plate_x0) / (plate_x1 - plate_x0), 2);
+module plate2d() {
+    n = 30;
+    pts = concat(
+        [for (i = [0 : n]) let(x = plate_x0 + i * (plate_x1 - plate_x0) / n) [x, W / 2 + plate_half(x)]],
+        [for (i = [n : -1 : 0]) let(x = plate_x0 + i * (plate_x1 - plate_x0) / n) [x, W / 2 - plate_half(x)]]);
+    offset(r = 3) offset(delta = -3)
+    intersection() {
+        polygon(pts);
+        // 前の角を大きく丸める
+        hull() {
+            translate([plate_x0 - 1, W / 2 - plate_half_front - 1]) square([1, 2 * plate_half_front + 2]);
+            translate([plate_x1 - plate_front_r, W / 2 + plate_half_front - plate_front_r]) circle(r = plate_front_r);
+            translate([plate_x1 - plate_front_r, W / 2 - plate_half_front + plate_front_r]) circle(r = plate_front_r);
+        }
+    }
+}
+// 刷る向きのまま出力(上から見た形が台の上、くぼみは上の面)
+module plate() {
+    th = T + plate_floor;
+    difference() {
+        union() {
+            // 台に付く縁は 0.4mm、上の縁は 1.6mm 面取り
+            translate([0, 0, 0]) linear_extrude(0.4) offset(delta = -0.4) plate2d();
+            translate([0, 0, 0.4]) linear_extrude(th - 2) plate2d();
+            for (i = [0 : 7]) translate([0, 0, th - 1.6 + i * 0.2]) linear_extrude(0.2 + 0.001) offset(delta = -(i + 1) * 0.2) plate2d();
+        }
+        // 本体の土台がはまるくぼみ(後ろは開けて、曲がりが出てくる所にする)
+        translate([0, 0, plate_floor]) linear_extrude(th) offset(r = fit) offset(delta = -0.01)
+            translate([plate_x0 - 5, 0]) square([base_len - (plate_x0 - 5), W]);
+    }
+}
+
+if (part == "plate") plate();
+else if (part == "one") slab2d_extrude() profile();
 else if (part == "lower") lower();
 else if (part == "upper") upper();
 else if (part == "both") { color("#444") lower(); color("#777") upper(); }
