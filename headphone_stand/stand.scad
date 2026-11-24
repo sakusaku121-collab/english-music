@@ -17,7 +17,6 @@
 part = "lower";        // "lower"(土台と柱の下) / "upper"(柱の上と腕) / "both"(確認用に組んだ姿)
                        // "one"(継ぎ目なしの一体。A1 mini に入るのは H が 175mm まで)
                        // "foot"(左右に倒れにくくする幅広の足の板。土台をはめて接着する)
-                       // "cap"(腕の上にかぶせる受け皿)
 
 H = 225;               // 全体の高さ。エレコム HS-HP06SUBK(高さ約200mm)が足の板に当たらない高さ
 W = 50;                // 幅(刷るときの高さ)
@@ -27,7 +26,8 @@ base_t = 8;            // 土台の厚み
 arm_len = 105;         // 腕の先までの長さ(柱の後ろの面から)
 r_bend = 28;           // 柱から腕へ曲がる所の内側の半径
 r_foot = 30;           // 柱と土台の間の内側の丸み
-lip_h = 0;             // 腕の先の返し。受け皿(cap)を付けるので 0 にした(受け皿の前の端に返しがある)
+arm_sag = 7;           // 腕の真ん中のくぼみの深さ(バンドが収まる)
+arm_curl = 10;         // 腕の先の反り上がり(前に滑り落ちない)
 edge = 1.2;            // 幅の面の縁の面取り
 round_r = 2;           // 横から見た形の角の丸み
 
@@ -43,18 +43,6 @@ foot_w = 110;          // 足の板の幅(左右)
 foot_t = 6;            // 足の板の厚み
 foot_pocket = 3;       // 土台がはまるくぼみの深さ
 foot_margin = 6;       // 土台の前後に足す長さ
-
-// 受け皿: 腕の上にかぶせて接着する部品。ヘッドバンドの弧に合わせて左右に丸く盛り上がり、
-// 幅を 90mm に広げて、どこに掛けてもバンドが安定するようにする。前の端は返しで少し高くする。
-// 刷る向き: 丸い断面を台の上に寝かせ、腕の長さ方向を高さにする(弧がきれいに出て、サポートも要らない)
-cap_w = 90;            // 左右の幅
-cap_r = 75;            // 上の面の弧の半径(バンドの内側の丸みに近い値)
-cap_center = 18;       // 真ん中の厚み(溝の底から測る前の、下の面から)
-cap_edge = 3;          // 両端の厚み
-cap_slot = 4;          // 腕の上の部分がはまる溝の深さ
-cap_x0 = 42;           // 受け皿の後ろの端(腕がまっすぐになる所)
-cap_lip = 5;           // 前の端の返しの高さ
-cap_len = arm_len - cap_x0;
 
 $fn = 96;
 
@@ -86,15 +74,19 @@ module profile() {
             }
             translate([0, bend_c[1]]) square([bend_c[0], H - bend_c[1]]);
         }
-        // 腕
-        translate([bend_c[0], H - T]) square([arm_len - bend_c[0], T]);
-        // 腕の先の返し
-        translate([arm_len - T / 2, H - T / 2]) hull() {
-            circle(d = T);
-            translate([0, lip_h]) circle(d = T * 0.6);
+        // 腕: 板そのものをしならせた形。真ん中がくぼみ(バンドが収まる所)、先が反り上がる
+        arm_path = [for (i = [0 : 40]) let(t = i / 40) arm_center(t)];
+        for (i = [0 : len(arm_path) - 2]) hull() {
+            translate(arm_path[i]) circle(d = T);
+            translate(arm_path[i + 1]) circle(d = T);
         }
     }
 }
+
+// 腕の板の中心線。t=0 が曲がりの終わり(水平につながる)、t=1 が先
+// 高さ = 元の高さ - arm_sag·sin²(πt) + arm_curl·t³  → 根元は水平、真ん中で下がり、先で反り上がる
+function arm_center(t) = [bend_c[0] + t * (arm_len - T / 2 - bend_c[0]),
+                          H - T / 2 - arm_sag * pow(sin(180 * t), 2) + arm_curl * pow(t, 3)];
 
 // 横から見た形を幅の分だけ伸ばす。台に付く面と上の面の縁は、0.2mm ずつ段にして面取りする
 module slab2d_extrude() {
@@ -154,33 +146,7 @@ module foot() {
     }
 }
 
-module cap2d(extra = 0) {
-    cy = cap_center - cap_r;
-    offset(r = 1.5) offset(delta = -1.5)
-    difference() {
-        intersection() {
-            translate([0, cy]) circle(r = cap_r + extra);
-            translate([-cap_w / 2 - extra, 0]) square([cap_w + 2 * extra, cap_center + extra + 1]);
-        }
-        translate([-(W / 2 + fit), -0.01]) square([W + 2 * fit, cap_slot]);
-    }
-}
-// 刷る向きのまま出力: 断面が台の上、z が腕の長さ方向(z=0 が後ろの端、上が前の端)
-module cap() {
-    body_len = cap_len - cap_lip - 3;
-    union() {
-        linear_extrude(body_len) cap2d();
-        // 返し: 45° で広げてから少し伸ばす(45° なのでサポートなしで刷れる)
-        n = round(cap_lip / 0.4);
-        for (i = [0 : n - 1]) translate([0, 0, body_len + i * 0.4]) linear_extrude(0.4 + 0.001) cap2d(extra = (i + 1) * 0.4);
-        translate([0, 0, body_len + cap_lip]) linear_extrude(3) cap2d(extra = cap_lip);
-    }
-}
-// 本体に載せた位置(確認用)
-module cap_placed() multmatrix([[0, 0, 1, cap_x0], [0, 1, 0, H - cap_slot], [1, 0, 0, W / 2], [0, 0, 0, 1]]) cap();
-
 if (part == "foot") foot();
-else if (part == "cap") cap();
 else if (part == "one") slab2d_extrude() profile();
 else if (part == "lower") lower();
 else if (part == "upper") upper();
