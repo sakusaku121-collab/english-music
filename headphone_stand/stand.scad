@@ -18,17 +18,19 @@ part = "lower";        // "lower"(土台と柱の下) / "upper"(柱の上と腕)
                        // "one"(継ぎ目なしの一体。A1 mini に入るのは H が 175mm まで)
 
 H = 225;               // 全体の高さ。エレコム HS-HP06SUBK(高さ約200mm)が土台に当たらない高さ
-W = 70;                // 幅(刷るときの高さ)。足の板をやめたので、左右に倒れにくいよう広くした
-T = 10;                // 柱と腕の厚み
-base_len = 130;        // 土台の前後の長さ
-base_t = 7;            // 土台の厚み
+W = 70;                // 幅(刷るときの高さ)。左右に倒れにくいよう広め
+// 元のモデル(Deltaprints)と同じく、同じ厚みの板1枚を曲げたような形にする。
+// 曲がる所は内側と外側が同じ中心の円(板を曲げたときの形)。元のモデルの板は約5mmで、PLA だと割れたので厚くした
+T = 8;                 // 板の厚み(柱・腕・土台・曲がりすべて同じ)
+base_t = T;
+base_len = 130;        // 土台の前後の長さ(柱の後ろの面から)
 arm_len = 105;         // 腕の先までの長さ(柱の後ろの面から)
 r_bend = 40;           // 柱から腕へ曲がる所の内側の半径
-r_foot = 45;           // 柱から土台へ曲がる所の内側の半径(1枚の板を曲げたように大きく)
+r_foot = 16;           // 柱から土台へ曲がる所の内側の半径。外側は 24mm。
+                       // 大きくすると、机に付く所が前へ下がって、スタンドだけのときに後ろへ倒れる
 arm_sag = 3;           // 腕の真ん中のくぼみの深さ(バンドが収まる)
 arm_curl = 7;          // 腕の先の反り上がり(前に滑り落ちない)
-base_corner = 14;      // 土台の前の角の丸み(上から見て)
-back_r = 10;           // 柱の後ろと土台の底の角の丸み(横から見て)
+base_corner = 12;      // 土台の前の角の丸み(上から見て)
 edge = 2;              // 幅の面の縁の面取り(角ばらないよう大きめ)
 round_r = 2;           // 横から見た形の角の丸み
 
@@ -36,32 +38,36 @@ lap_y = 110;           // 継ぎ目の下の端の高さ
 lap_len = 45;          // 継ぎ目の重なりの長さ
 fit = 0.2;             // 継ぎ目のすき間
 peg_d = 5;             // ダボの太さ
-peg_len = 3;           // ダボの長さ(重ねた相手の厚み T/2 より短く)
+peg_len = 2.5;         // ダボの長さ(重ねた相手の厚み T/2 より短く)
+peg_hole = 3;          // ダボ穴の深さ(表に 1mm 残る)
 peg_y = [lap_y + 12, lap_y + lap_len - 12];
 
 $fn = 96;
 
 bend_c = [T + r_bend, H - T - r_bend];   // 曲がりの中心
 
+foot_c = [T + r_foot, T + r_foot];        // 下の曲がりの中心
+
 module profile() {
     // 尖った角を作らないよう、凹んだ角も出た角も丸める
     offset(r = round_r) offset(delta = -round_r)
     offset(r = -round_r) offset(delta = round_r)
-    difference() {
     union() {
         // 土台(前の縁は丸く。上から見た前の角は lower() で丸める)
         hull() {
-            square([1, base_t]);
+            translate([foot_c[0], 0]) square([1, base_t]);
             translate([base_len - base_t / 2, base_t / 2]) circle(d = base_t);
-            translate([0, 0]) square([base_len - base_t / 2, 0.01]);
+        }
+        // 柱から土台への曲がり(板を曲げた形)
+        intersection() {
+            difference() {
+                translate(foot_c) circle(r = r_foot + T);
+                translate(foot_c) circle(r = r_foot);
+            }
+            square([foot_c[0] + 0.01, foot_c[1] + 0.01]);
         }
         // 柱
-        square([T, bend_c[1]]);
-        // 柱と土台の間の丸み
-        difference() {
-            translate([T, base_t]) square([r_foot, r_foot]);
-            translate([T + r_foot, base_t + r_foot]) circle(r = r_foot);
-        }
+        translate([0, foot_c[1]]) square([T, bend_c[1] - foot_c[1]]);
         // 柱から腕への曲がり
         intersection() {
             difference() {
@@ -75,12 +81,6 @@ module profile() {
         for (i = [0 : len(arm_path) - 2]) hull() {
             translate(arm_path[i]) circle(d = T);
             translate(arm_path[i + 1]) circle(d = T);
-        }
-    }
-        // 柱の後ろと土台の底の角も丸める(角ばらせない)
-        difference() {
-            translate([-1, -1]) square([back_r + 1, back_r + 1]);
-            translate([back_r, back_r]) circle(r = back_r);
         }
     }
 }
@@ -156,7 +156,7 @@ module lower() {
 module upper() {
     difference() {
         slab2d_extrude() upper2d();
-        for (y = peg_y) translate([T / 2 - 0.01, y, W / 2]) peg(peg_len + 0.5, peg_d + 2 * fit);
+        for (y = peg_y) translate([T / 2 - 0.01, y, W / 2]) peg(peg_hole, peg_d + 2 * fit);
     }
 }
 
