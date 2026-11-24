@@ -16,8 +16,9 @@
 
 part = "lower";        // "lower"(土台と柱の下) / "upper"(柱の上と腕) / "both"(確認用に組んだ姿)
                        // "one"(継ぎ目なしの一体。A1 mini に入るのは H が 175mm まで)
+                       // "foot"(左右に倒れにくくする幅広の足の板。土台をはめて接着する)
 
-H = 250;               // 全体の高さ
+H = 225;               // 全体の高さ。エレコム HS-HP06SUBK(高さ約200mm)が足の板に当たらない高さ
 W = 50;                // 幅(刷るときの高さ)
 T = 12;                // 柱と腕の厚み
 base_len = 125;        // 土台の前後の長さ
@@ -35,6 +36,12 @@ fit = 0.2;             // 継ぎ目のすき間
 peg_d = 5;             // ダボの太さ
 peg_len = 4;           // ダボの長さ(重ねた相手の厚み T/2 より短く)
 peg_y = [lap_y + 12, lap_y + lap_len - 12];
+
+// 足の板: スタンド本体の幅(W)だけだと左右に倒れやすいので、幅の広い板を別に刷って土台をはめ、接着する
+foot_w = 110;          // 足の板の幅(左右)
+foot_t = 6;            // 足の板の厚み
+foot_pocket = 3;       // 土台がはまるくぼみの深さ
+foot_margin = 6;       // 土台の前後に足す長さ
 
 $fn = 96;
 
@@ -124,7 +131,18 @@ module upper() {
     }
 }
 
-if (part == "one") slab2d_extrude() profile();
+// 足の板。刷る向き(板を台に寝かせる)のまま出力する。くぼみは上の面
+module foot() {
+    L = base_len + 2 * foot_margin;
+    difference() {
+        translate([-foot_margin, -(foot_w - W) / 2, 0])
+            linear_extrude(foot_t) offset(r = 10) offset(delta = -10) square([L, foot_w]);
+        translate([-fit, -fit, foot_t - foot_pocket]) cube([base_len + 2 * fit, W + 2 * fit, foot_pocket + 1]);
+    }
+}
+
+if (part == "foot") foot();
+else if (part == "one") slab2d_extrude() profile();
 else if (part == "lower") lower();
 else if (part == "upper") upper();
-else { color("#444") lower(); color("#777") upper(); }
+else if (part == "both") { color("#444") lower(); color("#777") upper(); }
