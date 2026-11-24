@@ -16,33 +16,28 @@
 
 part = "lower";        // "lower"(土台と柱の下) / "upper"(柱の上と腕) / "both"(確認用に組んだ姿)
                        // "one"(継ぎ目なしの一体。A1 mini に入るのは H が 175mm まで)
-                       // "foot"(左右に倒れにくくする幅広の足の板。土台をはめて接着する)
 
-H = 225;               // 全体の高さ。エレコム HS-HP06SUBK(高さ約200mm)が足の板に当たらない高さ
-W = 50;                // 幅(刷るときの高さ)
-T = 12;                // 柱と腕の厚み
-base_len = 125;        // 土台の前後の長さ
-base_t = 8;            // 土台の厚み
+H = 225;               // 全体の高さ。エレコム HS-HP06SUBK(高さ約200mm)が土台に当たらない高さ
+W = 70;                // 幅(刷るときの高さ)。足の板をやめたので、左右に倒れにくいよう広くした
+T = 10;                // 柱と腕の厚み
+base_len = 130;        // 土台の前後の長さ
+base_t = 7;            // 土台の厚み
 arm_len = 105;         // 腕の先までの長さ(柱の後ろの面から)
-r_bend = 28;           // 柱から腕へ曲がる所の内側の半径
-r_foot = 30;           // 柱と土台の間の内側の丸み
-arm_sag = 7;           // 腕の真ん中のくぼみの深さ(バンドが収まる)
-arm_curl = 10;         // 腕の先の反り上がり(前に滑り落ちない)
-edge = 1.2;            // 幅の面の縁の面取り
+r_bend = 40;           // 柱から腕へ曲がる所の内側の半径
+r_foot = 45;           // 柱から土台へ曲がる所の内側の半径(1枚の板を曲げたように大きく)
+arm_sag = 3;           // 腕の真ん中のくぼみの深さ(バンドが収まる)
+arm_curl = 7;          // 腕の先の反り上がり(前に滑り落ちない)
+base_corner = 14;      // 土台の前の角の丸み(上から見て)
+back_r = 10;           // 柱の後ろと土台の底の角の丸み(横から見て)
+edge = 2;              // 幅の面の縁の面取り(角ばらないよう大きめ)
 round_r = 2;           // 横から見た形の角の丸み
 
 lap_y = 110;           // 継ぎ目の下の端の高さ
 lap_len = 45;          // 継ぎ目の重なりの長さ
 fit = 0.2;             // 継ぎ目のすき間
 peg_d = 5;             // ダボの太さ
-peg_len = 4;           // ダボの長さ(重ねた相手の厚み T/2 より短く)
+peg_len = 3;           // ダボの長さ(重ねた相手の厚み T/2 より短く)
 peg_y = [lap_y + 12, lap_y + lap_len - 12];
-
-// 足の板: スタンド本体の幅(W)だけだと左右に倒れやすいので、幅の広い板を別に刷って土台をはめ、接着する
-foot_w = 110;          // 足の板の幅(左右)
-foot_t = 6;            // 足の板の厚み
-foot_pocket = 3;       // 土台がはまるくぼみの深さ
-foot_margin = 6;       // 土台の前後に足す長さ
 
 $fn = 96;
 
@@ -52,8 +47,9 @@ module profile() {
     // 尖った角を作らないよう、凹んだ角も出た角も丸める
     offset(r = round_r) offset(delta = -round_r)
     offset(r = -round_r) offset(delta = round_r)
+    difference() {
     union() {
-        // 土台(前の縁は丸く)
+        // 土台(前の縁は丸く。上から見た前の角は lower() で丸める)
         hull() {
             square([1, base_t]);
             translate([base_len - base_t / 2, base_t / 2]) circle(d = base_t);
@@ -79,6 +75,12 @@ module profile() {
         for (i = [0 : len(arm_path) - 2]) hull() {
             translate(arm_path[i]) circle(d = T);
             translate(arm_path[i + 1]) circle(d = T);
+        }
+    }
+        // 柱の後ろと土台の底の角も丸める(角ばらせない)
+        difference() {
+            translate([-1, -1]) square([back_r + 1, back_r + 1]);
+            translate([back_r, back_r]) circle(r = back_r);
         }
     }
 }
@@ -123,10 +125,32 @@ module upper2d() {
     }
 }
 
+// 土台を上から見た形の前の角を丸める。刷るとき台に付く側(z=0)の角は、45° より寝ないよう涙形にする
+module base_top2d() {
+    r = base_corner;
+    intersection() {
+        hull() {
+            square([base_len - r, W]);
+            translate([base_len - r, W - r]) circle(r = r);
+            translate([base_len - r, r]) rotate(180) teardrop2d(2 * r);
+        }
+        translate([-1, 0]) square([base_len + 2, W]);
+    }
+}
+module base_corner_cut() {
+    difference() {
+        translate([base_len - base_corner - 1, -1, -1]) cube([base_corner + 10, base_t + 3, W + 2]);
+        rotate([90, 0, 0]) translate([0, 0, -(base_t + 3)]) linear_extrude(base_t + 5) base_top2d();
+    }
+}
+
 module lower() {
-    union() {
-        slab2d_extrude() lower2d();
-        for (y = peg_y) translate([T / 2 - 0.01, y, W / 2]) peg(peg_len, peg_d);
+    difference() {
+        union() {
+            slab2d_extrude() lower2d();
+            for (y = peg_y) translate([T / 2 - 0.01, y, W / 2]) peg(peg_len, peg_d);
+        }
+        base_corner_cut();
     }
 }
 module upper() {
@@ -136,18 +160,7 @@ module upper() {
     }
 }
 
-// 足の板。刷る向き(板を台に寝かせる)のまま出力する。くぼみは上の面
-module foot() {
-    L = base_len + 2 * foot_margin;
-    difference() {
-        translate([-foot_margin, -(foot_w - W) / 2, 0])
-            linear_extrude(foot_t) offset(r = 10) offset(delta = -10) square([L, foot_w]);
-        translate([-fit, -fit, foot_t - foot_pocket]) cube([base_len + 2 * fit, W + 2 * fit, foot_pocket + 1]);
-    }
-}
-
-if (part == "foot") foot();
-else if (part == "one") slab2d_extrude() profile();
+if (part == "one") slab2d_extrude() profile();
 else if (part == "lower") lower();
 else if (part == "upper") upper();
 else if (part == "both") { color("#444") lower(); color("#777") upper(); }
