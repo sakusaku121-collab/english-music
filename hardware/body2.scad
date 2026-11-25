@@ -50,7 +50,10 @@ module base_foot2d() hull() {
 
 module rounded_box2d(x0, x1, y0, y1, r) offset(r = r) offset(delta = -r) translate([x0, y0]) square([x1 - x0, y1 - y0]);
 
-module side_solid() rotate([90, 0, 0]) translate([0, 0, -150]) linear_extrude(300) offset(r = 2) offset(delta = -2) polygon(side_profile);
+// 角の丸み(試作7号〜)。外形を一度この分だけ内へ縮めてから、同じ半径の球でなでて元の大きさに戻すと、
+// 角がすべてこの半径で丸くなる(OpenSCAD の minkowski)。0 にすると丸めない(書き出しが速い)
+r3 = 2.5;
+module side_solid() rotate([90, 0, 0]) translate([0, 0, -150]) linear_extrude(300) offset(delta = -r3) offset(r = 2) offset(delta = -2) polygon(side_profile);
 
 // 土台は、薄い縁の板と、首の付け根の周りの盛り上がりでできている。
 // 寸法は既製品を定規で測った値(2026-11-23)。測った場所はまとめページの「既製品の分析」タブ。
@@ -82,8 +85,8 @@ module basin_cut() {
         x0 = basin_center_x - basin_len / 2 + i * step;
         xm = x0 + step / 2;
         hull() {
-            translate([x0, basin_y[0], rim_top(xm)]) cube([step + 0.01, 0.01, 30]);
-            translate([x0, basin_y[1], rim_top(xm) - basin_dip(xm)]) cube([step + 0.01, 40, 30]);
+            translate([x0, basin_y[0], rim_top(xm) - r3]) cube([step + 0.01, 0.01, 30]);
+            translate([x0, basin_y[1], rim_top(xm) - r3 - basin_dip(xm)]) cube([step + 0.01, 40, 30]);
         }
     }
 }
@@ -93,8 +96,8 @@ module base() difference() { base_solid(); basin_cut(); }
 module base_solid() union() {
     // 縁の板
     intersection() {
-        linear_extrude(40) base_foot2d();
-        rotate([90, 0, 0]) translate([0, 0, -150]) linear_extrude(300) offset(r = 2) offset(delta = -2) polygon(base_profile);
+        linear_extrude(40) offset(delta = -r3) base_foot2d();
+        rotate([90, 0, 0]) translate([0, 0, -150]) linear_extrude(300) offset(delta = -r3) offset(r = 2) offset(delta = -2) polygon(base_profile);
     }
     // 首の付け根の盛り上がり。裾は縁の上面から、継ぎ目の高さで首の太さになる
     intersection() {
@@ -111,7 +114,7 @@ module base_solid() union() {
 function chaikin(p) = [for (i = [0 : len(p) - 1]) let(a = p[i], b = p[(i + 1) % len(p)]) each [0.75 * a + 0.25 * b, 0.25 * a + 0.75 * b]];
 plate_xy_pts = [for (p = plate_outline_uv) plate_xy(p)];
 plate_smooth = chaikin(chaikin(chaikin(plate_xy_pts)));
-module plate2d() offset(r = 1) polygon(plate_smooth);
+module plate2d() offset(delta = -r3) offset(r = 1) polygon(plate_smooth);
 
 // 真上から見た形(首と天面)。頭(天面の下のかたまり)は前面のボタンがある高さ(head_bottom)まで
 // 天面の外形のまま下り、そこから首へ向かって絞る。試作6号は 62mm から絞っていた。
@@ -120,7 +123,7 @@ head_bottom = 40;      // 前面の下の角の高さ(IMG_1096 で 40.5mm)
 module top_env() union() {
     translate([0, 0, head_bottom]) linear_extrude(150) plate2d();                  // 頭
     hull() {                                                                     // 頭の下から首へ
-        translate([0, 0, 12]) linear_extrude(1) rounded_box2d(-130, -40, neck_y[0], neck_y[1], 12);
+        translate([0, 0, 12]) linear_extrude(1) offset(delta = -r3) rounded_box2d(-130, -40, neck_y[0], neck_y[1], 12);
         translate([0, 0, head_bottom]) linear_extrude(0.5) plate2d();
     }
 }
@@ -136,22 +139,24 @@ front_env_pts = [
     [-20, 42], [-24, 56], [-27.5, 80]        // 指側: 頭の下で少し内へ
 ];
 module front_env() multmatrix([[0, 0, 1, -150], [1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1]])
-    linear_extrude(300) offset(r = 6) offset(delta = -6) polygon(front_env_pts);
+    linear_extrude(300) offset(delta = -r3) offset(r = 6) offset(delta = -6) polygon(front_env_pts);
 
 // 前面の上の縁: 既製品は正面から見ると真ん中が凹んだ鞍の形(ずれ D、IMG_1114・IMG_1095)。
 // 前後方向に寝かせた大きな円柱で、天面の前の端の真ん中を削る。天面は前が高いので、削れるのは前の端だけ
 saddle_depth = 8;      // 前の端の真ん中での深さ(写真から見積もり)
 saddle_r = 60;
 saddle_y = 10;         // 凹みの真ん中の左右位置
-module saddle_cut() translate([-80, saddle_y, plate_front[1] + saddle_r - saddle_depth]) rotate([0, 90, 0]) cylinder(r = saddle_r, h = 100, $fn = 120);
+module saddle_cut() translate([-80, saddle_y, plate_front[1] + saddle_r - saddle_depth - r3]) rotate([0, 90, 0]) cylinder(r = saddle_r, h = 100, $fn = 120);
 
-module body() union() {
+module body_core() union() {
     base();
     difference() {
         intersection() { side_solid(); top_env(); front_env(); }
         saddle_cut();
     }
 }
+
+module body() if (r3 > 0) minkowski() { body_core(); sphere(r = r3, $fn = 12); } else body_core();
 
 // ---- 部品の位置 ----
 // 天面の上の点 (u, v) を本体の座標へ。u は天面に沿った前方向、v は手のひら側
