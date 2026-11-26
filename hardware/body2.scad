@@ -125,9 +125,21 @@ module neck2d() offset(delta = -r3) rounded_box2d(neck_c[0] - neck_h[0], neck_c[
 include <grip_loft.scad>
 module grip_loft() if (head_tilt == 35) polyhedron(grip_pts_35, grip_faces_35, convexity = 4);
                    else polyhedron(grip_pts_29, grip_faces_29, convexity = 4);
-module top_env() union() {
+// 握る部分の作り方。1回に1か所だけ変えて握り比べるため、試作7号の作り方も残す。
+//   "v7"   : 頭は前面のボタンの高さ(40mm)まで天面の形のまま下り、そこから首へ絞る(試作7号。握って確かめ済み)
+//   "loft" : 首の足元から天面の縁の下まで、筒のようになめらかな面(試作9号の案。未確認)
+grip_style = "v7";
+module top_env() if (grip_style == "loft") union() {
     grip_loft();
     on_plate_plane(-rim - 0.5) linear_extrude(rim + 30) plate2d();
+} else union() {
+    translate([0, 0, head_bottom]) linear_extrude(150) plate2d();
+    // 首は土台の継ぎ目の高さから上だけ(試作7号は高さ 12mm からの大きな四角で、土台の上に台形がかぶさっていた。
+    // ここは土台の一部なので、土台を替える試し A に含める)
+    hull() {
+        translate([0, 0, collar_top - 1]) linear_extrude(1) neck2d();
+        translate([0, 0, head_bottom]) linear_extrude(0.5) plate2d();
+    }
 }
 // 天面の縁のくぼみ(3・F・Q の側)は hull で埋まる。真下へ切ると縦の折れ目ができたので、
 // 天面と同じ傾きの面の上だけで切る
@@ -139,10 +151,8 @@ module plate_notch_cut() on_plate_plane(-rim) translate([0, 0, 0.01]) linear_ext
 // 指側は天面の縁からほぼまっすぐ下りて、頭の下で少し内へ入る。値は正面の写真から見積もった
 front_env_pts = [
     [-27.5, 170], [50, 170],                 // 天面の高さでは天面の幅いっぱい
-    // 手のひら側: 天面の縁の下を浅くえぐって、親指の付け根(ふくらみ)を当てて押さえる面にする。
-    // 試作7号は 50 → 34 まで大きく斜めに落としたので、押さえる面がなくなり手がずり落ちた(使った人の感想)
-    [50, 98], [47, 86], [45, 72], [45, 56], [46, 44],
-    [46, 0],
+    [50, 98], [42, 78], [36, 58], [34, 44],  // 手のひら側: 天面の縁から斜めに落とす(試作7号の値)
+    [38, 30], [40, 0],
     [-12, 0], [-12, 30],
     [-20, 42], [-24, 56], [-27.5, 80]        // 指側: 頭の下で少し内へ
 ];
@@ -157,7 +167,8 @@ saddle_y = 10;         // 凹みの真ん中の左右位置
 module saddle_cut() translate([-80, saddle_y, plate_front[1] + saddle_r - saddle_depth - r3]) rotate([0, 90, 0]) cylinder(r = saddle_r, h = 100, $fn = 120);
 
 module body_core() difference() {
-    intersection() { side_solid(); top_env(); }
+    if (grip_style == "loft") intersection() { side_solid(); top_env(); }
+    else intersection() { side_solid(); top_env(); front_env(); }
     saddle_cut();
 }
 
