@@ -40,14 +40,6 @@ neck_y = [-8, 36];
 // 土台: 前後は横の輪郭で決まる。左右は手のひら側へ大きく張り出し、手の側面を置く所になる
 base_y = [-13, 62];   // 手のひら側の端は、全体の幅が商品ページの 90mm になるように決めた
 base_r = 22;
-// 土台を上から見た形(試作7号〜): 既製品は扇形で、手首側が広く丸く、首の前で細い(IMG_1109・IMG_1123)。
-// 手首側の楕円と首の前の楕円をつないだ形にした。前後の端(-21.8〜-125.3)と左右の端(base_y)は測った値、
-// 楕円の大きさは写真から見積もった値
-module base_foot2d() hull() {
-    translate([-92, (base_y[0] + base_y[1]) / 2]) scale([33, (base_y[1] - base_y[0]) / 2]) circle(r = 1, $fn = 96);
-    translate([-40, 14]) scale([18, 22]) circle(r = 1, $fn = 64);
-}
-
 module rounded_box2d(x0, x1, y0, y1, r) offset(r = r) offset(delta = -r) translate([x0, y0]) square([x1 - x0, y1 - y0]);
 
 // 角の丸み(試作7号〜)。外形を一度この分だけ内へ縮めてから、同じ半径の球でなでて元の大きさに戻すと、
@@ -55,60 +47,59 @@ module rounded_box2d(x0, x1, y0, y1, r) offset(r = r) offset(delta = -r) transla
 r3 = 2.5;
 module side_solid() rotate([90, 0, 0]) translate([0, 0, -150]) linear_extrude(300) offset(delta = -r3) offset(r = 2) offset(delta = -2) polygon(side_profile);
 
-// 土台は、薄い縁の板と、首の付け根の周りの盛り上がりでできている。
-// 寸法は既製品を定規で測った値(2026-11-23)。測った場所はまとめページの「既製品の分析」タブ。
-// IMG_1096 で「土台の上面」として測った約20mm は、この盛り上がりの上の継ぎ目の高さだった。
+// ---- 土台(試作8号〜) ----
+// 既製品の土台は、外の縁が丸く少し盛り上がり、その内側が一段くぼんで(盆地)、そこから首へ向かって
+// 裾が広がるようにへこんだ曲面で立ち上がる(IMG_1177・IMG_1179)。左手の小指側の手のひらのふくらみが
+// この盆地に収まって、手の高さと位置が決まる。試作7号は、縁の板と首の周りの 10mm の坂を
+// hull でつないだだけで、くぼみがなく、坂も角ばっていた(手が置けずにずり落ちた)。
+// 寸法: 縁の厚さ・継ぎ目の高さ・盆地の深さは定規で測った値(2026-11-23)。広がり方の幅は写真から見積もり。
 rim_front = 10;    // 1: 前の端の縁の厚さ
 rim_back = 9;      // 2: 手首側の先の縁の厚さ
-collar_top = 21;   // 3・4: 継ぎ目の高さ。手のひら側も指側も 21mm
-collar_flare = 10; // 盛り上がりの裾が首から広がる幅。IMG_1097 から見積もった値で、測ってはいない
+collar_top = 21;   // 3・4: 首の付け根の継ぎ目の高さ
+basin_depth = 3;   // 盆地の深さ(縁の上から)
+flare_w = 12;      // 首から裾が広がる幅
+lip_r = 3;         // 外の縁の丸み
 
-base_profile = [[-21.8, 0], [-21.8, rim_front], [-125.3, rim_back], [-125.3, 0]];
+// 土台を上から見た形: 前後の端は測った値。左右の端は x ごとの関数で、手首側が手のひら側へ広く張り出し、
+// 前へ行くほど細くなる。前後の端は丸くすぼめる
+base_xb = -125.3; base_xf = -21.8; base_c = 14;
+function bt(x) = (x - base_xb) / (base_xf - base_xb);
+function base_pinch(t) = pow(max(sin(180 * t), 0), 0.25);
+function base_ymax(x) = base_c + (base_y[1] - 22 * pow(bt(x), 1.5) - base_c) * base_pinch(bt(x));
+function base_ymin(x) = base_c + (base_y[0] + 5 * bt(x) - base_c) * base_pinch(bt(x));
+// 首が土台に立つ所(角の丸い四角)と、そこからの距離
+neck_c = [-76.5, 14]; neck_h = [31.5, 22]; neck_r = 12;
+function d_neck(x, y) = let(qx = abs(x - neck_c[0]) - (neck_h[0] - neck_r), qy = abs(y - neck_c[1]) - (neck_h[1] - neck_r))
+    norm([max(qx, 0), max(qy, 0)]) + min(max(qx, qy), 0) - neck_r;
+function rim_top(x) = rim_front + (rim_back - rim_front) * (base_xf - x) / (base_xf - base_xb);
+// 土台の上面の高さ。de は外の縁からの距離
+function base_z(x, y, de) = let(
+    dn = d_neck(x, y),
+    gap = max(de + max(dn, 0), 0.01),
+    w = min(flare_w, gap * 0.55),
+    flare = dn <= 0 ? collar_top - rim_top(x) : (collar_top - rim_top(x)) * pow(max(0, 1 - dn / w), 2),
+    // 盆地は外の縁と首の間で、縁寄り(縁から 4 割)が一番深い。縁と首が近い所(前・指側)では浅くする
+    trough = dn <= 0 ? 0 : basin_depth * pow(sin(180 * min(1, de / (gap * 0.85))), 2) * min(1, max(0, (gap - 8) / 8)),
+    lip = lip_r - sqrt(max(0, lip_r * lip_r - pow(lip_r - min(de, lip_r), 2))))
+    rim_top(x) + flare - trough - lip;
 
-module neck_foot2d() rounded_box2d(-125, -46, neck_y[0], neck_y[1], 12);
-
-// 手のひら側の盆地: 左手を置いたとき小指の腹の側面が収まる所。手のひら側の土台の上面が、
-// 前後方向に山と山の間 80mm、真ん中(山から 40mm)で最大 3mm 下がる(定規を渡して測った値、IMG_1122)。
-// 山の前後の位置は土台の前後の真ん中とした(測っていない)。首の側では、盛り上がりの裾の外から深くなる。
-basin_len = 80;
-basin_depth = 3;
-basin_center_x = (-21.8 + -125.3) / 2;
-basin_y = [neck_y[1] + collar_flare, neck_y[1] + collar_flare + 8];   // ここから外側で深さいっぱい
-function rim_top(x) = rim_front + (rim_back - rim_front) * (-21.8 - x) / (125.3 - 21.8);
-function basin_dip(x) = abs(x - basin_center_x) >= basin_len / 2 ? 0
-    : basin_depth * (1 + cos(180 * (x - basin_center_x) / (basin_len / 2))) / 2;
-
-module basin_cut() {
-    n = 40;
-    step = basin_len / n;
-    for (i = [0 : n - 1]) {
-        x0 = basin_center_x - basin_len / 2 + i * step;
-        xm = x0 + step / 2;
-        hull() {
-            translate([x0, basin_y[0], rim_top(xm) - r3]) cube([step + 0.01, 0.01, 30]);
-            translate([x0, basin_y[1], rim_top(xm) - r3 - basin_dip(xm)]) cube([step + 0.01, 40, 30]);
-        }
-    }
-}
-
-module base() difference() { base_solid(); basin_cut(); }
-
-module base_solid() union() {
-    // 縁の板
-    intersection() {
-        linear_extrude(40) offset(delta = -r3) base_foot2d();
-        rotate([90, 0, 0]) translate([0, 0, -150]) linear_extrude(300) offset(delta = -r3) offset(r = 2) offset(delta = -2) polygon(base_profile);
-    }
-    // 首の付け根の盛り上がり。裾は縁の上面から、継ぎ目の高さで首の太さになる
-    intersection() {
-        hull() {
-            translate([0, 0, rim_back - 0.5]) linear_extrude(0.5) offset(r = collar_flare) neck_foot2d();
-            translate([0, 0, collar_top]) linear_extrude(0.5) neck_foot2d();
-        }
-        side_solid();
-        linear_extrude(40) base_foot2d();
-    }
-}
+nbx = 70; nby = 34;
+base_pts_top = [for (i = [0 : nbx]) for (j = [0 : nby])
+    let(t = 0.005 + 0.99 * i / nbx, x = base_xb + t * (base_xf - base_xb), y0 = base_ymin(x), y1 = base_ymax(x), v = j / nby,
+        y = y0 + v * (y1 - y0), de = min(min(v, 1 - v) * (y1 - y0), min(t, 1 - t) * (base_xf - base_xb)))
+    [x, y, base_z(x, y, de)]];
+base_pts = concat(base_pts_top, [for (p = base_pts_top) [p[0], p[1], 0]]);
+function bi(i, j) = i * (nby + 1) + j;
+NB = (nbx + 1) * (nby + 1);
+base_faces = concat(
+    [for (i = [0 : nbx - 1]) for (j = [0 : nby - 1]) each [[bi(i, j), bi(i, j + 1), bi(i + 1, j + 1)], [bi(i, j), bi(i + 1, j + 1), bi(i + 1, j)]]],
+    [for (i = [0 : nbx - 1]) for (j = [0 : nby - 1]) each [[NB + bi(i, j), NB + bi(i + 1, j + 1), NB + bi(i, j + 1)], [NB + bi(i, j), NB + bi(i + 1, j), NB + bi(i + 1, j + 1)]]],
+    [for (i = [0 : nbx - 1]) each [[bi(i, 0), bi(i + 1, 0), NB + bi(i + 1, 0)], [bi(i, 0), NB + bi(i + 1, 0), NB + bi(i, 0)]]],
+    [for (i = [0 : nbx - 1]) each [[bi(i, nby), NB + bi(i, nby), NB + bi(i + 1, nby)], [bi(i, nby), NB + bi(i + 1, nby), bi(i + 1, nby)]]],
+    [for (j = [0 : nby - 1]) each [[bi(0, j), NB + bi(0, j), NB + bi(0, j + 1)], [bi(0, j), NB + bi(0, j + 1), bi(0, j + 1)]]],
+    [for (j = [0 : nby - 1]) each [[bi(nbx, j), bi(nbx, j + 1), NB + bi(nbx, j + 1)], [bi(nbx, j), NB + bi(nbx, j + 1), NB + bi(nbx, j)]]]
+);
+module base() polyhedron(points = base_pts, faces = base_faces, convexity = 6);
 
 // 天面の外形の点をなめらかにつなぐ(Chaikin の角切り。試作6号は直線でつないでカクカクしていた: ずれ C)
 function chaikin(p) = [for (i = [0 : len(p) - 1]) let(a = p[i], b = p[(i + 1) % len(p)]) each [0.75 * a + 0.25 * b, 0.25 * a + 0.75 * b]];
@@ -122,8 +113,12 @@ module plate2d() offset(delta = -r3) offset(r = 1) polygon(plate_smooth);
 head_bottom = 40;      // 前面の下の角の高さ(IMG_1096 で 40.5mm)
 module top_env() union() {
     translate([0, 0, head_bottom]) linear_extrude(150) plate2d();                  // 頭
-    hull() {                                                                     // 頭の下から首へ
-        translate([0, 0, 12]) linear_extrude(1) offset(delta = -r3) rounded_box2d(-130, -40, neck_y[0], neck_y[1], 12);
+    // 頭の下から首へ。首は土台の継ぎ目の高さ(collar_top)から上だけ。それより下は土台が受け持つ。
+    // 試作7号は首の足元を高さ 12mm・前後 -130〜-40 の大きな四角にしていたので、土台の上に台形のかたまりが
+    // かぶさって、盆地も裾の広がりも埋まっていた(使った人の指摘、IMG_1181)
+    hull() {
+        translate([0, 0, collar_top - 1]) linear_extrude(1) offset(delta = -r3)
+            rounded_box2d(neck_c[0] - neck_h[0], neck_c[0] + neck_h[0], neck_c[1] - neck_h[1], neck_c[1] + neck_h[1], neck_r);
         translate([0, 0, head_bottom]) linear_extrude(0.5) plate2d();
     }
 }
@@ -133,8 +128,10 @@ module top_env() union() {
 // 指側は天面の縁からほぼまっすぐ下りて、頭の下で少し内へ入る。値は正面の写真から見積もった
 front_env_pts = [
     [-27.5, 170], [50, 170],                 // 天面の高さでは天面の幅いっぱい
-    [50, 98], [42, 78], [36, 58], [34, 44],  // 手のひら側: 天面の縁から斜めに落とす(親指の付け根の逃げ)
-    [38, 30], [40, 0],                       // 首と土台の高さでは絞らない
+    // 手のひら側: 天面の縁の下を浅くえぐって、親指の付け根(ふくらみ)を当てて押さえる面にする。
+    // 試作7号は 50 → 34 まで大きく斜めに落としたので、押さえる面がなくなり手がずり落ちた(使った人の感想)
+    [50, 98], [47, 86], [45, 72], [45, 56], [46, 44],
+    [46, 0],
     [-12, 0], [-12, 30],
     [-20, 42], [-24, 56], [-27.5, 80]        // 指側: 頭の下で少し内へ
 ];
@@ -148,15 +145,20 @@ saddle_r = 60;
 saddle_y = 10;         // 凹みの真ん中の左右位置
 module saddle_cut() translate([-80, saddle_y, plate_front[1] + saddle_r - saddle_depth - r3]) rotate([0, 90, 0]) cylinder(r = saddle_r, h = 100, $fn = 120);
 
-module body_core() union() {
-    base();
-    difference() {
-        intersection() { side_solid(); top_env(); front_env(); }
-        saddle_cut();
-    }
+module body_core() difference() {
+    intersection() { side_solid(); top_env(); front_env(); }
+    saddle_cut();
 }
 
-module body() if (r3 > 0) minkowski() { body_core(); sphere(r = r3, $fn = 12); } else body_core();
+// 台に付く底は平らのまま残す(底の縁まで丸めると、浮いた所ができてサポートが付いた)。
+// 土台は上の面を関数で丸めてあるので、球でなでるのは土台より上だけ
+module body() union() {
+    base();
+    if (r3 > 0) intersection() {
+        minkowski() { body_core(); sphere(r = r3, $fn = 12); }
+        translate([-200, -100, 0]) cube([400, 200, 300]);
+    } else body_core();
+}
 
 // ---- 部品の位置 ----
 // 天面の上の点 (u, v) を本体の座標へ。u は天面に沿った前方向、v は手のひら側
