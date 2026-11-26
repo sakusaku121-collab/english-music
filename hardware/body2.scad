@@ -60,13 +60,14 @@ basin_depth = 3;   // 盆地の深さ(縁の上から)
 flare_w = 12;      // 首から裾が広がる幅
 lip_r = 3;         // 外の縁の丸み
 
-// 土台を上から見た形: 前後の端は測った値。左右の端は x ごとの関数で、手首側が手のひら側へ広く張り出し、
-// 前へ行くほど細くなる。前後の端は丸くすぼめる
-base_xb = -125.3; base_xf = -21.8; base_c = 14;
+// 土台を上から見た形: 既製品を紙になぞって測った外形(IMG_1183、reference/tools/sole_trace.py)。
+// 前後 106mm・左右 88mm で、手のひら側へ首から 44mm 張り出す。試作7号(見積もり)は 98×70mm しかなかった。
+// x ごとの指側(ymin)と手のひら側(ymax)の端の表を使う
+include <base_outline.scad>
+base_xb = base_x_range[0]; base_xf = base_x_range[1];
 function bt(x) = (x - base_xb) / (base_xf - base_xb);
-function base_pinch(t) = pow(max(sin(180 * t), 0), 0.25);
-function base_ymax(x) = base_c + (base_y[1] - 22 * pow(bt(x), 1.5) - base_c) * base_pinch(bt(x));
-function base_ymin(x) = base_c + (base_y[0] + 5 * bt(x) - base_c) * base_pinch(bt(x));
+function base_ymax(x) = lookup(x, base_ymax_tab);
+function base_ymin(x) = lookup(x, base_ymin_tab);
 // 首が土台に立つ所(角の丸い四角)と、そこからの距離
 neck_c = [-76.5, 14]; neck_h = [31.5, 22]; neck_r = 12;
 function d_neck(x, y) = let(qx = abs(x - neck_c[0]) - (neck_h[0] - neck_r), qy = abs(y - neck_c[1]) - (neck_h[1] - neck_r))
@@ -83,9 +84,9 @@ function base_z(x, y, de) = let(
     lip = lip_r - sqrt(max(0, lip_r * lip_r - pow(lip_r - min(de, lip_r), 2))))
     rim_top(x) + flare - trough - lip;
 
-nbx = 70; nby = 34;
+nbx = 80; nby = 40;
 base_pts_top = [for (i = [0 : nbx]) for (j = [0 : nby])
-    let(t = 0.005 + 0.99 * i / nbx, x = base_xb + t * (base_xf - base_xb), y0 = base_ymin(x), y1 = base_ymax(x), v = j / nby,
+    let(t = i / nbx, x = base_xb + t * (base_xf - base_xb), y0 = base_ymin(x), y1 = base_ymax(x), v = j / nby,
         y = y0 + v * (y1 - y0), de = min(min(v, 1 - v) * (y1 - y0), min(t, 1 - t) * (base_xf - base_xb)))
     [x, y, base_z(x, y, de)]];
 base_pts = concat(base_pts_top, [for (p = base_pts_top) [p[0], p[1], 0]]);
