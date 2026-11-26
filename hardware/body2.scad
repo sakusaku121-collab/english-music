@@ -176,8 +176,7 @@ module saddle_cut() translate([-80, saddle_y, plate_front[1] + saddle_r - saddle
 module tube_core() difference() {
     if (head_tilt == 35) polyhedron(tube_pts_35, tube_faces_35, convexity = 4);   // 天面の縁まで含む
     else polyhedron(tube_pts_29, tube_faces_29, convexity = 4);
-    on_plate_plane(-r3) translate([-200, -200, 0]) cube([400, 400, 200]);   // 天面より上を落とす(球でなでて戻る)
-    translate([0, 0, r3]) saddle_cut();
+    saddle_cut();
 }
 module body_core() if (grip_style == "tube") tube_core(); else difference() {
     if (grip_style == "loft") intersection() { side_solid(); top_env(); }
@@ -189,7 +188,8 @@ module body_core() if (grip_style == "tube") tube_core(); else difference() {
 // 土台は上の面を関数で丸めてあるので、球でなでるのは土台より上だけ
 module body() union() {
     base();
-    if (r3 > 0) intersection() {
+    if (grip_style == "tube") body_core();   // 筒は面がなめらかで、天面の縁は tools_grip_tube.py で丸めてある
+    else if (r3 > 0) intersection() {
         minkowski() { body_core(); sphere(r = r3, $fn = 12); }
         translate([-200, -100, 0]) cube([400, 200, 300]);
     } else body_core();

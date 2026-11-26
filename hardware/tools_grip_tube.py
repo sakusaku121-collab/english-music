@@ -12,7 +12,8 @@ import math, re, os
 HERE = os.path.dirname(os.path.abspath(__file__))
 txt = open(os.path.join(HERE, 'body2_measured.scad')).read()
 uv = [tuple(map(float, p)) for p in re.findall(r'\[(-?[\d.]+), (-?[\d.]+)\]', txt.split('plate_outline_uv =')[1].split(';')[0])]
-STICK_X = -48.1; RIM = 4; Z0 = 20.5; R3 = 2.5
+STICK_X = -48.1; RIM = 4; Z0 = 20.5; R3 = 0.0   # 角は球でなでずに、天面の縁をここで丸める
+EDGE_R = 2.5                           # 天面の縁の上の角の丸み
 W, D = 39.0, 45.0                      # 左右・前後の太さ
 KB, KT = 0.93, 1.10                    # 下の端・上の端の太さの比率
 LEAN = 24.0                            # 前への傾き(度)
@@ -76,18 +77,25 @@ for tilt in (29, 35):
             p = ray_hit(plate, pc, ang); p = (p[0], p[1], pz(p[0]))
             ring.append(tuple((1 - s) * e[i] + s * p[i] for i in range(3)))
         rings.append(ring)
-    # 天面の縁: 外形のまま、天面より少し上まで立てる(天面より上は body2.scad で切り落とす)
-    rings.append([(p[0], p[1], p[2] + RIM + 3) for p in rings[-1]])
+    # 天面の縁: 外形のまま立ち上げ、上の角を 1/4 円で丸めて天面(傾いた平らな面)で閉じる
+    last = rings[-1]
+    def inset(p, d):
+        dx, dy = p[0] - pc[0], p[1] - pc[1]; L = math.hypot(dx, dy)
+        return (pc[0] + dx * (L - d) / L, pc[1] + dy * (L - d) / L)
+    for j in range(1, 7):
+        a_ = math.pi / 2 * j / 6
+        d = EDGE_R * (1 - math.cos(a_)); h = RIM - EDGE_R + EDGE_R * math.sin(a_)
+        rings.append([(*inset(p, d), p[2] + h) for p in last])
     NLL = len(rings) - 1
     pts = [p for r in rings for p in r]
-    pts.append((xb, YB, Z0)); pts.append((pc[0], pc[1], zt + RIM + 3))
+    pts.append((xb, YB, Z0)); pts.append((pc[0], pc[1], zt + RIM))
     B, T = len(pts) - 2, len(pts) - 1
     def i(l, kk): return l * NA + (kk % NA)
     faces = [f for l in range(NLL) for kk in range(NA) for f in ([i(l, kk), i(l + 1, kk), i(l + 1, kk + 1)], [i(l, kk), i(l + 1, kk + 1), i(l, kk + 1)])]
     faces += [[B, i(0, kk), i(0, kk + 1)] for kk in range(NA)] + [[T, i(NLL, kk + 1), i(NLL, kk)] for kk in range(NA)]
     # 前面の面の位置: 各高さの断面で y = BTN_Y の線と交わる一番前の x(球でなでる分 R3 を足す)
     tab = []
-    for r in rings[:-1]:
+    for r in rings[:NL + 1]:
         xs = []
         for kk in range(NA):
             p, q = r[kk], r[(kk + 1) % NA]
