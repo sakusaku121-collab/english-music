@@ -18,7 +18,7 @@ W, D = 39.0, 45.0                      # 左右・前後の太さ
 KB, KT = 0.93, 1.10                    # 下の端・上の端の太さの比率
 LEAN = 24.0                            # 前への傾き(度)
 YB = 12.0                              # 筒の下の端の左右の中心
-FLARE_FROM = 0.6                       # 筒の高さのこの割合から上で天面へ広がる
+FLARE_FROM = 0.8                       # 筒の高さのこの割合から上で天面へ広がる(試作10号の最初は 0.6。指のかかる所まで広がっていた)
 NA, NL = 120, 48
 BTN_Y = 5.0                            # 前面のボタンの左右の位置
 
@@ -73,7 +73,9 @@ for tilt in (29, 35):
         for kk in range(NA):
             ang = 2 * math.pi * kk / NA
             r = a * b / math.sqrt((b * math.cos(ang)) ** 2 + (a * math.sin(ang)) ** 2)
-            e = (c[0] + r * math.cos(ang), c[1] + r * math.sin(ang), z)
+            ex, ey = c[0] + r * math.cos(ang), c[1] + r * math.sin(ang)
+            # 高さは点ごとに天面まで割り振る(筒の上の端が天面と同じ傾きになり、後ろで天面を突き抜けない)
+            e = (ex, ey, Z0 + t * (pz(ex) - Z0))
             p = ray_hit(plate, pc, ang); p = (p[0], p[1], pz(p[0]))
             ring.append(tuple((1 - s) * e[i] + s * p[i] for i in range(3)))
         rings.append(ring)
@@ -85,7 +87,7 @@ for tilt in (29, 35):
     for j in range(1, 7):
         a_ = math.pi / 2 * j / 6
         d = EDGE_R * (1 - math.cos(a_)); h = RIM - EDGE_R + EDGE_R * math.sin(a_)
-        rings.append([(*inset(p, d), p[2] + h) for p in last])
+        rings.append([(q[0], q[1], pz(q[0]) + h) for q in (inset(p, d) for p in last)])   # 天面と同じ傾きの面の上に乗せる
     NLL = len(rings) - 1
     pts = [p for r in rings for p in r]
     pts.append((xb, YB, Z0)); pts.append((pc[0], pc[1], zt + RIM))
@@ -100,11 +102,15 @@ for tilt in (29, 35):
         for kk in range(NA):
             p, q = r[kk], r[(kk + 1) % NA]
             if (p[1] - BTN_Y) * (q[1] - BTN_Y) <= 0 and p[1] != q[1]:
-                xs.append(p[0] + (BTN_Y - p[1]) / (q[1] - p[1]) * (q[0] - p[0]))
-        if xs: tab.append((sum(p[2] for p in r) / NA, max(xs) + R3))
+                f = (BTN_Y - p[1]) / (q[1] - p[1])
+                xs.append((p[0] + f * (q[0] - p[0]), p[2] + f * (q[2] - p[2])))
+        if xs: x_, z_ = max(xs); tab.append((z_, x_ + R3))
     out.append('tube_pts_%d = [%s];' % (tilt, ', '.join('[%.2f, %.2f, %.2f]' % p for p in pts)))
     out.append('tube_faces_%d = [%s];' % (tilt, ', '.join('[%s]' % ', '.join(map(str, f)) for f in faces)))
     out.append('tube_front_x_%d = [%s];' % (tilt, ', '.join('[%.2f, %.2f]' % p for p in tab)))
     out.append('tube_bottom_%d = [%.2f, %.2f, %.2f, %.2f];' % (tilt, xb, YB, D / 2 * KB, W / 2 * KB))
+    # 前面のボタンの高さの基準: 広がる前の筒の前の面の真上での天面の高さ(試しの筒の切り口の前側にあたる)
+    x_tf = pc[0] + (D / 2) * KT
+    out.append('tube_front_top_z_%d = %.2f;' % (tilt, pz(x_tf) + RIM))
     print(tilt, 'bottom center x %.1f, top center (%.1f, %.1f) z %.1f' % (xb, pc[0], pc[1], zt))
 open(os.path.join(HERE, 'grip_tube.scad'), 'w').write('\n'.join(out) + '\n')

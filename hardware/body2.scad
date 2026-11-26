@@ -94,7 +94,7 @@ function base_z(x, y, de) = let(
     lip = lip_r - sqrt(max(0, lip_r * lip_r - pow(lip_r - min(de, lip_r), 2))))
     rim_top(x) + flare - trough - lip;
 
-nbx = 80; nby = 40;
+nbx = 150; nby = 70;   // 細かくして、筒の付け根のギザギザを減らす
 base_pts_top = [for (i = [0 : nbx]) for (j = [0 : nby])
     let(t = i / nbx, x = base_xb + t * (base_xf - base_xb), y0 = base_ymin(x), y1 = base_ymax(x), v = j / nby,
         y = y0 + v * (y1 - y0), de = min(min(v, 1 - v) * (y1 - y0), min(t, 1 - t) * (base_xf - base_xb)))
@@ -207,7 +207,10 @@ module on_head(u, v) translate(head_pt(u, v)) rotate([0, -head_tilt, 0]) childre
 esc_pos = [21.6, -4.0];
 
 // 前面の3つのボタン(IMG_1096 で測った高さ)。薬指用のボタンは、形が決まってから置き場所を決める
-side_button_z = [57, 72.6, 88.2];
+// 前面の3つのボタンの高さ。筒の作り方では、試しの筒を握った写真(IMG_1189)の指先の位置に合わせる:
+// 切り口の前側から 人差し指 約33mm 下、中指 約60mm 下。上のボタン = 人差し指、下 = 中指、真ん中はその間
+tube_front_top_z = head_tilt == 35 ? tube_front_top_z_35 : tube_front_top_z_29;
+side_button_z = grip_style == "tube" ? [tube_front_top_z - 60, tube_front_top_z - 46.5, tube_front_top_z - 33] : [57, 72.6, 88.2];
 side_button_y = 5;   // 試作7号で 8 → 5。既製品の正面写真ではボタンがもう少し指側にある(見積もり)
 // 筒の作り方では、前面のボタンは筒の前の面に、面の傾きに合わせて置く(筒を握った人差し指・中指の先)
 tube_front_x = head_tilt == 35 ? tube_front_x_35 : tube_front_x_29;
