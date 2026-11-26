@@ -12,13 +12,17 @@ import math, re, os
 HERE = os.path.dirname(os.path.abspath(__file__))
 txt = open(os.path.join(HERE, 'body2_measured.scad')).read()
 uv = [tuple(map(float, p)) for p in re.findall(r'\[(-?[\d.]+), (-?[\d.]+)\]', txt.split('plate_outline_uv =')[1].split(';')[0])]
-STICK_X = -48.1; RIM = 4; Z0 = 20.5; R3 = 0.0   # 角は球でなでずに、天面の縁をここで丸める
+STICK_X = -48.1; RIM = 2.5; Z0 = 20.5; R3 = 0.0   # 角は球でなでずに、天面の縁をここで丸める
 EDGE_R = 2.5                           # 天面の縁の上の角の丸み
 W, D = 39.0, 45.0                      # 左右・前後の太さ
 KB, KT = 0.93, 1.10                    # 下の端・上の端の太さの比率
 LEAN = 24.0                            # 前への傾き(度)
 YB = 12.0                              # 筒の下の端の左右の中心
-FLARE_FROM = 0.8                       # 筒の高さのこの割合から上で天面へ広がる(試作10号の最初は 0.6。指のかかる所まで広がっていた)
+FLARE_FROM = 0.8   # (使わない)最初の試作10号は上 2 割だけで急に広げたので、天面と筒の間に段ができた
+FLARE_POW = float(os.environ.get('FLARE_POW', '1.0'))
+# 広がり方: 筒の付け根から天面まで少しずつ広げる。s = t^FLARE_POW(t は付け根 0 〜 天面 1)。
+# 1.0 なら付け根から天面の縁までまっすぐな面(既製品の手のひら側のような一直線の斜面)。
+# 大きいほど下の方は細い筒のまま残り、上で広がる
 NA, NL = 120, 48
 BTN_Y = 5.0                            # 前面のボタンの左右の位置
 
@@ -68,7 +72,7 @@ for tilt in (29, 35):
         t = l / NL; z = Z0 + t * H
         c = (xb + t * H * tl, YB + t * (pc[1] - YB))
         a = (D / 2 - R3) * k(t); b = (W / 2 - R3) * k(t)
-        s = smooth((t - FLARE_FROM) / (1 - FLARE_FROM))
+        s = t ** FLARE_POW
         ring = []
         for kk in range(NA):
             ang = 2 * math.pi * kk / NA
@@ -113,4 +117,4 @@ for tilt in (29, 35):
     x_tf = pc[0] + (D / 2) * KT
     out.append('tube_front_top_z_%d = %.2f;' % (tilt, pz(x_tf) + RIM))
     print(tilt, 'bottom center x %.1f, top center (%.1f, %.1f) z %.1f' % (xb, pc[0], pc[1], zt))
-open(os.path.join(HERE, 'grip_tube.scad'), 'w').write('\n'.join(out) + '\n')
+open(os.environ.get('OUT', os.path.join(HERE, 'grip_tube.scad')), 'w').write('\n'.join(out) + '\n')
