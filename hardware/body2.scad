@@ -112,17 +112,27 @@ module plate2d() offset(delta = -r3) offset(r = 1) polygon(plate_smooth);
 // 天面の外形のまま下り、そこから首へ向かって絞る。試作6号は 62mm から絞っていた。
 // 頭の左右の絞り(とくに手のひら側の、親指の付け根の逃げ)は front_env で付ける(ずれ B・E)
 head_bottom = 40;      // 前面の下の角の高さ(IMG_1096 で 40.5mm)
+// 天面の面(傾いた面)に沿って置く。z = plate_z(x) + dz
+module on_plate_plane(dz) multmatrix([[1, 0, 0, 0], [0, 1, 0, 0], [-tan(head_tilt), 0, 1, plate_z(0) + dz], [0, 0, 0, 1]]) children();
+// 頭と首(試作9号〜): 天面の縁のすぐ下から、首の足元(継ぎ目の高さ)まで、まっすぐな面で下りる。
+// 既製品は手のひら側の、親指の腹が当たる面がほぼ直線の斜面(IMG_1187・1188)。
+// 試作7・8号は前面のボタンの高さまで天面の形のまま真下へ落としてから絞っていて、段と折れ目ができた
+// (使った人の感想: 気持ち悪い。試作6号の方がしっくりくる)
+rim = 4;               // 天面の縁の厚み。ここから下が斜面
+module neck2d() offset(delta = -r3) rounded_box2d(neck_c[0] - neck_h[0], neck_c[0] + neck_h[0], neck_c[1] - neck_h[1], neck_c[1] + neck_h[1], neck_r);
+// 握る部分: 首の足元から天面の縁の下まで、筒のようになめらかな面(tools_grip_loft.py が作る)。
+// その上に、天面の縁(厚み rim)を天面と同じ傾きで載せる
+include <grip_loft.scad>
+module grip_loft() if (head_tilt == 35) polyhedron(grip_pts_35, grip_faces_35, convexity = 4);
+                   else polyhedron(grip_pts_29, grip_faces_29, convexity = 4);
 module top_env() union() {
-    translate([0, 0, head_bottom]) linear_extrude(150) plate2d();                  // 頭
-    // 頭の下から首へ。首は土台の継ぎ目の高さ(collar_top)から上だけ。それより下は土台が受け持つ。
-    // 試作7号は首の足元を高さ 12mm・前後 -130〜-40 の大きな四角にしていたので、土台の上に台形のかたまりが
-    // かぶさって、盆地も裾の広がりも埋まっていた(使った人の指摘、IMG_1181)
-    hull() {
-        translate([0, 0, collar_top - 1]) linear_extrude(1) offset(delta = -r3)
-            rounded_box2d(neck_c[0] - neck_h[0], neck_c[0] + neck_h[0], neck_c[1] - neck_h[1], neck_c[1] + neck_h[1], neck_r);
-        translate([0, 0, head_bottom]) linear_extrude(0.5) plate2d();
-    }
+    grip_loft();
+    on_plate_plane(-rim - 0.5) linear_extrude(rim + 30) plate2d();
 }
+// 天面の縁のくぼみ(3・F・Q の側)は hull で埋まる。真下へ切ると縦の折れ目ができたので、
+// 天面と同じ傾きの面の上だけで切る
+module plate_notch_cut() on_plate_plane(-rim) translate([0, 0, 0.01]) linear_extrude(40)
+    difference() { offset(delta = 40) plate2d(); plate2d(); }
 
 // 前から見た形 [Y, Z]。既製品は天面の下で左右から絞られて首になり、とくに手のひら側(キーの側)は
 // 天面の縁から斜めに大きく落としてあって、そこに親指の付け根が入る(ずれ B・E、IMG_1114・IMG_1115)。
@@ -147,7 +157,7 @@ saddle_y = 10;         // 凹みの真ん中の左右位置
 module saddle_cut() translate([-80, saddle_y, plate_front[1] + saddle_r - saddle_depth - r3]) rotate([0, 90, 0]) cylinder(r = saddle_r, h = 100, $fn = 120);
 
 module body_core() difference() {
-    intersection() { side_solid(); top_env(); front_env(); }
+    intersection() { side_solid(); top_env(); }
     saddle_cut();
 }
 
