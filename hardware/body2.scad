@@ -69,7 +69,17 @@ function bt(x) = (x - base_xb) / (base_xf - base_xb);
 function base_ymax(x) = lookup(x, base_ymax_tab);
 function base_ymin(x) = lookup(x, base_ymin_tab);
 // 首が土台に立つ所(角の丸い四角)と、そこからの距離
-neck_c = [-76.5, 14]; neck_h = [31.5, 22]; neck_r = 12;
+// 握る部分の作り方。1回に1か所だけ変えて握り比べるため、試作7号の作り方も残す。
+//   "v7"   : 頭は前面のボタンの高さ(40mm)まで天面の形のまま下り、そこから首へ絞る(試作7号。握って確かめ済み)
+//   "loft" : 首の足元から天面の縁の下まで、筒のようになめらかな面(試作9号の案。未確認)
+//   "tube" : T1・T2 で決めた楕円の筒(左右 39mm × 前後 45mm)を土台から天面まで1本でつなぐ(試作10号〜)
+grip_style = "tube";
+// 筒の作り方("tube")では、首の足元は筒の下の端の楕円(tools_grip_tube.py が出す値)
+include <grip_tube.scad>
+tube_bottom = head_tilt == 35 ? tube_bottom_35 : tube_bottom_29;
+neck_c = grip_style == "tube" ? [tube_bottom[0], tube_bottom[1]] : [-76.5, 14];
+neck_h = grip_style == "tube" ? [tube_bottom[2], tube_bottom[3]] : [31.5, 22];
+neck_r = grip_style == "tube" ? min(tube_bottom[2], tube_bottom[3]) - 0.5 : 12;
 function d_neck(x, y) = let(qx = abs(x - neck_c[0]) - (neck_h[0] - neck_r), qy = abs(y - neck_c[1]) - (neck_h[1] - neck_r))
     norm([max(qx, 0), max(qy, 0)]) + min(max(qx, qy), 0) - neck_r;
 function rim_top(x) = rim_front + (rim_back - rim_front) * (base_xf - x) / (base_xf - base_xb);
@@ -125,10 +135,7 @@ module neck2d() offset(delta = -r3) rounded_box2d(neck_c[0] - neck_h[0], neck_c[
 include <grip_loft.scad>
 module grip_loft() if (head_tilt == 35) polyhedron(grip_pts_35, grip_faces_35, convexity = 4);
                    else polyhedron(grip_pts_29, grip_faces_29, convexity = 4);
-// 握る部分の作り方。1回に1か所だけ変えて握り比べるため、試作7号の作り方も残す。
-//   "v7"   : 頭は前面のボタンの高さ(40mm)まで天面の形のまま下り、そこから首へ絞る(試作7号。握って確かめ済み)
-//   "loft" : 首の足元から天面の縁の下まで、筒のようになめらかな面(試作9号の案。未確認)
-grip_style = "v7";
+
 module top_env() if (grip_style == "loft") union() {
     grip_loft();
     on_plate_plane(-rim - 0.5) linear_extrude(rim + 30) plate2d();
@@ -166,7 +173,13 @@ saddle_r = 60;
 saddle_y = 10;         // 凹みの真ん中の左右位置
 module saddle_cut() translate([-80, saddle_y, plate_front[1] + saddle_r - saddle_depth - r3]) rotate([0, 90, 0]) cylinder(r = saddle_r, h = 100, $fn = 120);
 
-module body_core() difference() {
+module tube_core() difference() {
+    if (head_tilt == 35) polyhedron(tube_pts_35, tube_faces_35, convexity = 4);   // 天面の縁まで含む
+    else polyhedron(tube_pts_29, tube_faces_29, convexity = 4);
+    on_plate_plane(-r3) translate([-200, -200, 0]) cube([400, 400, 200]);   // 天面より上を落とす(球でなでて戻る)
+    translate([0, 0, r3]) saddle_cut();
+}
+module body_core() if (grip_style == "tube") tube_core(); else difference() {
     if (grip_style == "loft") intersection() { side_solid(); top_env(); }
     else intersection() { side_solid(); top_env(); front_env(); }
     saddle_cut();
@@ -196,4 +209,8 @@ esc_pos = [21.6, -4.0];
 // 前面の3つのボタン(IMG_1096 で測った高さ)。薬指用のボタンは、形が決まってから置き場所を決める
 side_button_z = [57, 72.6, 88.2];
 side_button_y = 5;   // 試作7号で 8 → 5。既製品の正面写真ではボタンがもう少し指側にある(見積もり)
-module on_front(z) translate([0, side_button_y, z]) rotate([0, 90, 0]) children();
+// 筒の作り方では、前面のボタンは筒の前の面に、面の傾きに合わせて置く(筒を握った人差し指・中指の先)
+tube_front_x = head_tilt == 35 ? tube_front_x_35 : tube_front_x_29;
+function front_x(z) = grip_style == "tube" ? lookup(z, tube_front_x) : 0;
+function front_slope(z) = grip_style == "tube" ? atan((front_x(z + 2) - front_x(z - 2)) / 4) : 0;
+module on_front(z) translate([front_x(z), side_button_y, z]) rotate([0, 90 + front_slope(z), 0]) children();
