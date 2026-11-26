@@ -131,7 +131,7 @@ section[role="tabpanel"]{min-width:0}
   <div class="stack">
     <div class="panel next">
       <div class="label">NEXT ― 次にやること</div>
-      <h3>試作8号(proto_v8_29deg.stl)を刷って、手が土台に落ち着くか確かめる</h3>
+      <h3>首の左右の太さを1か所測る(図は「既製品の分析」タブ)</h3>
       <p>いまはフェーズ1「形を既製品に合わせる」の最後の確認。見てほしいのは、既製品と<b>同じように握れるか</b>だけ。ボタンの増設や中の空洞は、まだ考えなくてよい。</p>
       <ul>
         <li>黒の PLA Basic、インフィル 10% かライトニング、サポートはツリー(自動)</li>
@@ -745,6 +745,41 @@ section[role="tabpanel"]{min-width:0}
   <div class="shots">
     <figure><img src="img/sole_trace.jpg" alt="紙になぞった既製品と試作7号の土台の線に、点を打った図" width="540" height="580" loading="lazy"><figcaption>紙になぞった土台。赤が既製品、青が試作7号(IMG_1183、紙の四隅でゆがみを直した)</figcaption></figure>
     <figure><img src="img/v8_sheet.png" alt="試作8号を6方向から見た図" width="1400" height="866" loading="lazy"><figcaption>試作8号。上段: 正面・手のひら側・手のひら側の後ろから、下段: 指側・下から・斜め上</figcaption></figure>
+  </div>
+
+  <h2 id="neck-width">測ってほしい所(首の太さ、1か所だけ)</h2>
+  <p>握る所を筒の形で作るのに、首の<b>左右の太さ</b>だけが分からない。前後の奥行きは横の写真(IMG_1096)で測れている。左右は、正面の写真が斜め上から撮られていて縮んで写るので、写真からは測れない。</p>
+  <p><b>何に使うか:</b> 握る所の筒の、下の端(首の付け根)の断面の大きさを決める。断面は「前後の奥行き(測ってある)× 左右の太さ(これ)」の角の丸い楕円にする。筒の上の端は天面の外形(測ってある)。上と下の断面がどちらも測った値になるので、その間をなめらかにつなぐだけで、見積もりのない筒になる。試作7・8号で胴体がずれたのは、この左右の太さを見積もっていたから。</p>
+  <div class="cols">
+    <figure><div class="anno"><img src="img/measure_neck.jpg" alt="既製品を手のひら側から写した写真。首と土台の継ぎ目のすぐ上に、測る高さの赤い線を引いてある" width="756" height="1008"><svg viewBox="0 0 756 1008" aria-hidden="true">
+      <line class="s" x1="300" y1="462" x2="560" y2="456"/>
+      <line class="m" x1="300" y1="440" x2="560" y2="434"/>
+      <rect class="bg" x="420" y="372" width="250" height="40" rx="8"/><text class="lab" x="432" y="401">ここの高さで測る</text>
+      <rect class="bg" x="300" y="490" width="300" height="40" rx="8"/><text class="lab" x="312" y="519">黄色の点線 = 継ぎ目</text>
+    </svg></div><figcaption>手のひら側から見た既製品。<b>赤い線</b>(継ぎ目の線の指1本分くらい上)の高さで測る。測るのは、この写真で見えている面(手のひら側)から、<b>反対側の面(指側)まで</b>の太さ</figcaption></figure>
+    <div>
+      <div class="diagram"><svg viewBox="0 0 380 300" role="img" aria-label="真上から見た図。首を2枚のカードで手のひら側と指側からはさみ、カードの間を定規で測る">
+        <text class="dim" x="10" y="20">真上から見た図</text>
+        <ellipse cx="190" cy="150" rx="64" ry="72" class="shape"/>
+        <text x="160" y="155">首の断面</text>
+        <text class="dim" x="150" y="64">前(ボタンの面)↑</text>
+        <text class="dim" x="160" y="250">↓手首側</text>
+        <rect x="116" y="60" width="10" height="180" rx="2" fill="none" stroke="#2C6DD3" stroke-width="2.5"/>
+        <rect x="254" y="60" width="10" height="180" rx="2" fill="none" stroke="#2C6DD3" stroke-width="2.5"/>
+        <text x="40" y="275" style="fill:#2C6DD3;font-weight:700">カード(手のひら側)</text>
+        <text x="230" y="275" style="fill:#2C6DD3;font-weight:700">カード(指側)</text>
+        <line x1="126" y1="40" x2="254" y2="40" stroke="#D33A2C" stroke-width="2.5"/>
+        <line x1="126" y1="32" x2="126" y2="48" stroke="#D33A2C" stroke-width="2.5"/><line x1="254" y1="32" x2="254" y2="48" stroke="#D33A2C" stroke-width="2.5"/>
+        <text x="150" y="30" style="fill:#D33A2C;font-weight:700">ここを定規で</text>
+      </svg></div>
+      <ol>
+        <li>厚めのカード(ポイントカードなど)か本を2枚用意する。</li>
+        <li>赤い線の高さで、首を<b>手のひら側と指側から</b>2枚ではさむ。カードは机に垂直に立てる。</li>
+        <li>カードとカードの間の長さを定規で読む。</li>
+      </ol>
+      <div class="tablebox"><table><thead><tr><th>場所</th><th>測った値</th></tr></thead>
+        <tbody><tr><td>首の左右の太さ(赤い線の高さ)</td><td class="num">まだ</td></tr></tbody></table></div>
+    </div>
   </div>
 
   <h2>次にやること</h2>
