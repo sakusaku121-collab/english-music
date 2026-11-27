@@ -65,12 +65,15 @@ for tilt in (29, 35):
     def pz(x): return 120 - (-1 - x) * tn - RIM
     plate = offset_in(chaikin([(STICK_X + u * math.cos(math.radians(tilt)), v) for u, v in uv]), R3)
     pc = (sum(p[0] for p in plate) / len(plate), sum(p[1] for p in plate) / len(plate))
-    zt = pz(pc[0]); H = zt - Z0
-    xb = pc[0] - H * tl
+    # 筒の上の端の真ん中はスティックの真下(親指を置く所。試しの筒では切り口の真ん中に親指を置いた)。
+    # 天面の外形へ広げるときの向きの基準 pc(外形の重心)とは別に持つ
+    top_c = (STICK_X, 0.0)
+    zt = pz(top_c[0]); H = zt - Z0
+    xb = top_c[0] - H * tl
     rings = []
     for l in range(NL + 1):
         t = l / NL; z = Z0 + t * H
-        c = (xb + t * H * tl, YB + t * (pc[1] - YB))
+        c = (xb + t * H * tl, YB + t * (top_c[1] - YB))
         a = (D / 2 - R3) * k(t); b = (W / 2 - R3) * k(t)
         s = t ** FLARE_POW
         ring = []
@@ -114,7 +117,7 @@ for tilt in (29, 35):
     out.append('tube_front_x_%d = [%s];' % (tilt, ', '.join('[%.2f, %.2f]' % p for p in tab)))
     out.append('tube_bottom_%d = [%.2f, %.2f, %.2f, %.2f];' % (tilt, xb, YB, D / 2 * KB, W / 2 * KB))
     # 前面のボタンの高さの基準: 広がる前の筒の前の面の真上での天面の高さ(試しの筒の切り口の前側にあたる)
-    x_tf = pc[0] + (D / 2) * KT
+    x_tf = top_c[0] + (D / 2) * KT
     out.append('tube_front_top_z_%d = %.2f;' % (tilt, pz(x_tf) + RIM))
     print(tilt, 'bottom center x %.1f, top center (%.1f, %.1f) z %.1f' % (xb, pc[0], pc[1], zt))
 open(os.environ.get('OUT', os.path.join(HERE, 'grip_tube.scad')), 'w').write('\n'.join(out) + '\n')
