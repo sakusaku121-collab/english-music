@@ -78,7 +78,8 @@ grip_style = "tube";
 include <grip_tube.scad>
 tube_bottom = head_tilt == 35 ? tube_bottom_35 : tube_bottom_29;
 neck_c = grip_style == "tube" ? [tube_bottom[0], tube_bottom[1]] : [-76.5, 14];
-neck_h = grip_style == "tube" ? [tube_bottom[2], tube_bottom[3]] : [31.5, 22];
+// 土台の裾は筒の表面の 1mm 内側で終える(面がぴったり重なると、付け根にギザギザの線が出た)
+neck_h = grip_style == "tube" ? [tube_bottom[2] - 1, tube_bottom[3] - 1] : [31.5, 22];
 neck_r = grip_style == "tube" ? min(tube_bottom[2], tube_bottom[3]) - 0.5 : 12;
 function d_neck(x, y) = let(qx = abs(x - neck_c[0]) - (neck_h[0] - neck_r), qy = abs(y - neck_c[1]) - (neck_h[1] - neck_r))
     norm([max(qx, 0), max(qy, 0)]) + min(max(qx, qy), 0) - neck_r;
