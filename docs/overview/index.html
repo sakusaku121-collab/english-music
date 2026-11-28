@@ -135,9 +135,21 @@ section[role="tabpanel"]{min-width:0}
       <p>T1・T2 で決めた楕円の筒(左右 39mm × 前後 45mm)を、土台から天面まで段なく広げた形。天面の角度(29°)・高さ・キーの扇形・土台は既製品で測った値。筒の上の端の真ん中はスティックの真下(親指を置く所)。前面のボタンは、試しの筒を握った写真の人差し指・中指の位置(上の端から 33mm・60mm 下)。</p>
       <ul>
         <li>A と B の違いは広がり方だけ。A は付け根から天面の縁までまっすぐ広がる(既製品の手のひら側に近い)。B は下が試しの筒の太さのまま残り、上で広がる</li>
-        <li>印刷用: <span class="mono">hardware/stl/proto_v10A_straight_29deg.stl</span> と <span class="mono">proto_v10B_slimlow_29deg.stl</span>。1個 60g 前後の見込み。PLA、ライトニング 10%、ツリーサポート。台に2つは入らないので1個ずつ</li>
+        <li>印刷するもの: <span class="mono">hardware/stl/proto_v10A_straight_29deg.stl</span> と <span class="mono">proto_v10B_slimlow_29deg.stl</span>。台に2つは入らないので1個ずつ。1個 60〜65g の見込み(PETG は PLA より少し重い)</li>
+        <li><b>素材は PETG(2026-11-28 に PLA から切り替え)。</b>形を確かめる試作なので、素材が変わっても比べるのに問題はない</li>
         <li>見てほしい所: 手の左側を土台に置いたまま握れるか、親指がキーと ESC に届くか、人差し指・中指が前面のボタンに届くか、A と B どちらの太さが楽か</li>
       </ul>
+      <div class="tablebox" style="margin:10px 0"><table>
+        <thead><tr><th>設定(Bambu Studio)</th><th>値</th><th>理由</th></tr></thead>
+        <tbody>
+          <tr><td>フィラメント</td><td>Bambu PETG Basic のプロファイル</td><td>温度(ノズル約 240°C)と冷却はプロファイルのままでよい</td></tr>
+          <tr><td>プレート</td><td>テクスチャ PEI(A1 mini 付属の板)</td><td>スムース PEI だと PETG がくっつきすぎて板を傷めることがある。使うならスティックのりを薄く塗る</td></tr>
+          <tr><td>インフィル</td><td>ライトニング 10%</td><td>形を見るだけなので中身は少なくてよい</td></tr>
+          <tr><td>サポート</td><td>ツリー(自動)</td><td>天面の張り出しの下に要る</td></tr>
+          <tr><td>サポート 上部Z距離</td><td><b>0.25mm</b>(PLA は 0.2)</td><td>PETG はサポートと本体がくっつきやすく、はがしにくい。少し離す</td></tr>
+          <tr><td>並べ方</td><td>1枚に1個。A を刷って握ってから B</td><td>台に2つは入らない</td></tr>
+        </tbody>
+      </table></div>
       <div class="shots">
         <figure><img src="img/v10_AB.jpg" alt="試作10号のAとBを4方向から見た図" width="1400" height="653" loading="lazy"><figcaption>上段 A、下段 B(左から 手のひら側・斜め後ろ・前面・手首側)</figcaption></figure>
         <figure><img src="img/v10_side.jpg" alt="手のひら側から見た試作10号の影と既製品の横の輪郭を重ねた図" width="1400" height="630" loading="lazy"><figcaption>既製品(赤い線)との重ね図。天面の角度と高さ、土台はそろっている。胴体は既製品より細い</figcaption></figure>
@@ -182,7 +194,7 @@ section[role="tabpanel"]{min-width:0}
         <thead><tr><th>フェーズ</th><th>目的(何ができたら終わりか)</th><th>状態</th></tr></thead>
         <tbody>
           <tr><td>0 準備</td><td>プリンターを使えるようにする。既製品の不満点を集める</td><td class="ok">済み</td></tr>
-          <tr><td><b>1 形を既製品に合わせる</b></td><td>既製品(痛くない・扇形の配置が気に入っている)と<b>同じように握れる</b>形を作る。改善点はまだ足さない。<br>終わりの条件: 試作を握って、既製品と同じに感じる</td><td class="mid">いまここ(試作7号で確認)</td></tr>
+          <tr><td><b>1 形を既製品に合わせる</b></td><td>既製品(痛くない・扇形の配置が気に入っている)と<b>同じように握れる</b>形を作る。改善点はまだ足さない。<br>終わりの条件: 試作を握って、既製品と同じに感じる</td><td class="mid">いまここ(試作10号 A/B で確認)</td></tr>
           <tr><td>2 ボタンを足す</td><td>改善点のうち形に関わるものを足す: 床ボタン3つ、薬指のボタン、USB-C の口、スティックの付け方。<br>終わりの条件: 足したボタンすべてに、握ったまま(床ボタンは手をずらして)指が届く</td><td>まだ</td></tr>
           <tr><td>3 電子部品で動かす</td><td>Pico・スティック・スイッチをブレッドボードで仮につなぎ、ファームウェアで Apex を操作できる。<br>終わりの条件: ダッシュ分離・割り当て変更・ESC 長押しが射撃訓練場で動く。<b>部品が届けば、フェーズ1・2と並行してできる</b></td><td>部品待ち(スティック)</td></tr>
           <tr><td>4 完成版の筐体</td><td>中を空洞にして、天面の板・本体・底のふたに分ける。スイッチ・スティック(ネジ止め)・Pico・USB-C の取り付け場所を作る。<br>終わりの条件: 部品が全部収まり、ネジで組める</td><td>まだ</td></tr>
